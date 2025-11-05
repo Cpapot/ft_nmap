@@ -5,14 +5,16 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/27 15:14:09 by coco              #+#    #+#             */
-/*   Updated: 2025/10/27 15:20:55 by coco             ###   ########.fr       */
+/*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
+/*   Updated: 2025/11/05 17:40:22 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "../libft/includes/libft.h"
+#include "nmap.h"
 
-int	main(void)
+int	parsing(int argc, char **argv);
+
+int	main(int argc, char **argv)
 {
-	ft_printf("hello world");
+	parsing(argc, argv);
 }
