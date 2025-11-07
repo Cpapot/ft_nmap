@@ -6,7 +6,7 @@
 /*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:25:27 by coco              #+#    #+#             */
-/*   Updated: 2025/11/05 18:10:49 by coco             ###   ########.fr       */
+/*   Updated: 2025/11/07 15:42:44 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,10 @@
 # define UNKNOWN_PARAM "Unknown parameter: %s\n"
 
 
-bool	isFlags(char *str);
-bool	isInString(char a, char *str);
+bool	is_flags(char *str);
+bool	is_in_string(char a, char *str);
+bool	is_all_numbers(char *str);
+
 
 enum	e_parsing_flags {
 	UNKNOWN_F = 0,

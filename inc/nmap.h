@@ -6,7 +6,7 @@
 /*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:07:22 by coco              #+#    #+#             */
-/*   Updated: 2025/11/05 18:14:05 by coco             ###   ########.fr       */
+/*   Updated: 2025/11/07 15:47:01 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,12 +28,13 @@ enum e_nmap_scans_types {
 
 typedef struct s_nmap_data
 {
-	int		scan_type;		// le type de scan SYN, NULL, ACK, FIN, XMAS, UDP
-	int		*ports_range;	//count<=1024  default=[1->1024]
-	char	**ips;			//array d'ip
-	int		threads_count;	//nombre de thread			default = 0
+	int			scan_type;			// le type de scan SYN, NULL, ACK, FIN, XMAS, UDP
+	int			ports[1024];		//count<=1024  default=[1->1024]
+	char		**ips;				//array d'ip
+	int			threads_count;		//nombre de thread			default = 0
 	
-	int		exit_status;
+	t_memlist	*allocated_data;
+	int			exit_status;
 }	t_nmap_data;
 
 #endif
