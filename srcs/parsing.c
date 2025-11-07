@@ -6,7 +6,7 @@
 /*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/07 16:33:51 by coco             ###   ########.fr       */
+/*   Updated: 2025/11/07 16:39:27 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,8 +90,15 @@ int	parse_ports(char *portsStr, t_nmap_data *data)
 			//check warning
 		}
 	}
+	ft_free_split(portSplit);
 	return 0;
 }
+
+// int parse_ip(char *ipStr, t_nmap_data *data)
+// {
+// 	//on fait le bonus donc on resolve le dns (fonctions traceroute)
+// 	//on verifie si l'ip existe
+// }
 
 // return 0 si le prog doit continuer 1 si on doit fermer
 int	parsing(int argc, char **argv, t_nmap_data *data)
@@ -103,6 +110,7 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 			int flagId = find_flag(argv[i]);
 			switch (flagId)
 			{
+				// check la size des arguments (si --ports alors on doit obligatoirement avoir qqch derriere sinon crash)
 				case UNKNOWN_F:
 					printf(UNKNOWN_FLAG, argv[i]);
 					return 1;
