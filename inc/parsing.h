@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:25:27 by coco              #+#    #+#             */
-/*   Updated: 2025/11/07 15:42:44 by coco             ###   ########.fr       */
+/*   Updated: 2025/11/12 15:24:21 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,12 @@
 /*				parser error				*/
 # define UNKNOWN_FLAG "Unknown flag: %s\n"
 # define UNKNOWN_PARAM "Unknown parameter: %s\n"
+# define MISSING_ARG "Missing argument for flag: %s\n"
 
+# define INVALID_PORT "Invalid port parameter: %s\n"
+# define MAX_PORT_REACHED "Max ports reached (1024), the remaining ports will not be scanned.\n"
+
+# define UNKNOWN_HOST "Unknown host: %s\n"
 
 bool	is_flags(char *str);
 bool	is_in_string(char a, char *str);

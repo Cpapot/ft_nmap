@@ -3,20 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/07 16:39:27 by coco             ###   ########.fr       */
+/*   Updated: 2025/11/12 15:54:20 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parsing.h"
 
+char *resolve_host(const char *host);
+
 int	find_flag(char *flags_line)
 {
 	char **flags = ft_split_no(FLAGS_LIST, ' ');
 	//checkNUll
-	
+
 	for (int i = 0; i != FLAG_COUNT; i++)
 	{
 		if (ft_strcmp(flags_line, flags[i]))
@@ -29,14 +31,15 @@ int	find_flag(char *flags_line)
 	return UNKNOWN_F;
 }
 
-// return false if max ports (1024) is exceed 
+// return false if max ports (1024) is exceed
 // portToAdd != 0
-bool	add_port(int ports[1024], int portToAdd)
+bool	add_port(int ports[1024], int *port_count, int portToAdd)
 {
 	for (int i = 0; i != 1024; i++)
 	{
 		if (ports[i] == 0)
 		{
+			port_count++;
 			ports[i] = portToAdd;
 			return true;
 		}
@@ -46,33 +49,44 @@ bool	add_port(int ports[1024], int portToAdd)
 
 //ajouter une fonction de parsing pour chaque flag (parseFile(), parsePorts()......)
 
-// si on a + de 1024 port ne pas return d'erreur mais un warning qui dit que tous les ports ne seront pas scanné
 // return 0 si ok return 1 si error
+// to do : decomposer la fonction
 int	parse_ports(char *portsStr, t_nmap_data *data)
 {
 	//maybe check si dans la string on a que des nbr , et -
 	char **portSplit = ft_split_no(portsStr, ',');
 	//checkNUll
-	
+
 	for (int i = 0; portSplit[i] != NULL; i++)
 	{
-		
+
 		if (is_in_string('-', portSplit[i]))
 		{
 			char **portsRange = ft_split_no(portSplit[i], '-');
 			//checkNUll
-			
-			// check si size(portRange) == 2
-			// et startPort < endPort
-			// et (port == 0 || port >= 65535)
+
+			if (!(portsRange[0] && portsRange[1] && portsRange[2] == NULL))
+			{
+				printf(INVALID_PORT, portsStr);
+				return 1;
+			}
 			int startPort = ft_atoi(portsRange[0]);
 			int endPort = ft_atoi(portsRange[1]);
+
+			if (startPort >= endPort)
+			{
+				printf(INVALID_PORT, portsStr);
+				return 1;
+			}
 			ft_free_split(portsRange);
 
 			for (int range = startPort; range <= endPort; range++)
 			{
-				add_port(data->ports, range);
-				//check warning
+				if (!add_port(data->ports, &data->ports_count, range))
+				{
+					printf(MAX_PORT_REACHED);
+					return 0;
+				}
 			}
 		}
 		else
@@ -86,19 +100,33 @@ int	parse_ports(char *portsStr, t_nmap_data *data)
 			/*if (port == 0 || port >= 65535)
 				//invalid port
 			*/
-			add_port(data->ports, port);
-			//check warning
+			if (!add_port(data->ports, &data->ports_count ,port))
+			{
+				printf(MAX_PORT_REACHED);
+				return 0;
+			}
 		}
 	}
 	ft_free_split(portSplit);
 	return 0;
 }
 
-// int parse_ip(char *ipStr, t_nmap_data *data)
-// {
-// 	//on fait le bonus donc on resolve le dns (fonctions traceroute)
-// 	//on verifie si l'ip existe
-// }
+int parse_ip(char *ipStr, t_nmap_data *data)
+{
+	char *host = resolve_host(ipStr);
+	if (host != NULL)
+	{
+		char *ip = ft_strdup(host, &data->allocated_data);
+		//check null
+		ft_lstadd_back(&data->ips, ft_lstnew(ip, &data->allocated_data));
+	}
+	else
+	{
+		printf(UNKNOWN_HOST, ipStr);
+		return 1;
+	}
+	return 0;
+}
 
 // return 0 si le prog doit continuer 1 si on doit fermer
 int	parsing(int argc, char **argv, t_nmap_data *data)
@@ -110,13 +138,24 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 			int flagId = find_flag(argv[i]);
 			switch (flagId)
 			{
-				// check la size des arguments (si --ports alors on doit obligatoirement avoir qqch derriere sinon crash)
 				case UNKNOWN_F:
 					printf(UNKNOWN_FLAG, argv[i]);
 					return 1;
 				case PORTS_F:
-					i++;
+					if (++i >= argc)
+					{
+						printf(MISSING_ARG, argv[i - 1]);
+						return 1;
+					}
 					parse_ports(argv[i], data);
+					break;
+				case IP_F:
+					if (++i >= argc)
+					{
+						printf(MISSING_ARG, argv[i - 1]);
+						return 1;
+					}
+					parse_ip(argv[i], data);
 					break;
 				default :
 					printf("%d\n", flagId);

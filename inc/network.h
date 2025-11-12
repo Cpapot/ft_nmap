@@ -1,41 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   nmap.h                                             :+:      :+:    :+:   */
+/*   network.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/05 17:07:22 by coco              #+#    #+#             */
-/*   Updated: 2025/11/12 15:28:54 by cpapot           ###   ########.fr       */
+/*   Created: 2025/11/12 15:19:00 by cpapot            #+#    #+#             */
+/*   Updated: 2025/11/12 15:34:01 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef NMAP_H
-# define NMAP_H
+#ifndef NETWORK_H
+# define NETWORK_H
 
-# include "../libft/includes/libft.h"
+# include "nmap.h"
+
 # include <stdio.h>
 # include <stdlib.h>
+# include <netdb.h>
+# include <arpa/inet.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netinet/ip_icmp.h>
+# include <netinet/ip.h>
+# include <netinet/in.h>
+# include <string.h>
+# include <time.h>
+# include <stddef.h>
 
-enum e_nmap_scans_types {
-	SYN = 1,
-	NULLMODE,
-	ACK,
-	FIN,
-	XMAS,
-	UDP
-};
 
-typedef struct s_nmap_data
-{
-	int			scan_type;			// le type de scan SYN, NULL, ACK, FIN, XMAS, UDP
-	int			ports[1024];		//count<=1024  default=[1->1024]
-	int			ports_count;
-	t_list		*ips;
-	int			threads_count;		//nombre de thread			default = 0
-
-	t_memlist	*allocated_data;
-	int			exit_status;
-}	t_nmap_data;
 
 #endif

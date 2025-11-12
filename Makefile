@@ -6,11 +6,13 @@
 #				|_|    |_|_|\___||___/
 
 HEADERS		=	nmap.h				\
-				parsing.h
+				parsing.h			\
+				network.h
 
 SRCS		=	main.c				\
 				parsing.c			\
-				parsing_utils.c
+				parsing_utils.c		\
+				network_utils.c
 
 LIBFTSRC	=	libftprintf.a libft.a printffd.a
 
@@ -46,12 +48,12 @@ OBJS		=	$(addprefix $(OBJSDIR), $(SRCSPATH:.c=.o))
 define HEADER
 "\e[2J\e[H
 \033[1;36m
-  _____  __                                   
-_/ ____\/  |_     ____   _____ _____  ______  
-\   __\\   __\   /    \ /     \\__  \ \____ \ 
+  _____  __
+_/ ____\/  |_     ____   _____ _____  ______
+\   __\\   __\   /    \ /     \\__  \ \____ \
  |  |   |  |    |   |  \  Y Y  \/ __ \|  |_> >
- |__|   |__|____|___|  /__|_|  (____  /   __/ 
-          /_____/    \/      \/     \/|__|    
+ |__|   |__|____|___|  /__|_|  (____  /   __/
+          /_____/    \/      \/     \/|__|
 \033[0m
 endef
 export HEADER
