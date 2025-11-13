@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:25:27 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 14:35:13 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 15:04:35 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 
 # define FLAGS_LIST "--help --ports --ip --file --speedup --scan"
 # define FLAG_COUNT 6
+# define SCAN_LIST "SYN NULL FIN XMAS ACK UDP"
+# define SCAN_COUNT 6
 
 # define HELP_FLAG "Help Screen\nft_nmap [OPTIONS]\n--help Print this help screen\n\
 --ports ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n--ip ip addresses to scan in dot format\n\
@@ -39,6 +41,8 @@
 
 # define INVALID_SPEEDUP_PARAMETER "Invalid threads count parameter: %s\n"
 # define INVALID_THREAD_COUNT "The number of parallel threads must be between 1 and 255\n"
+
+# define UNKNOWN_SCAN "The specified scan does not exist: %s\n"
 
 bool	is_flags(char *str);
 bool	is_in_string(char a, char *str);

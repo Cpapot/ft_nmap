@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 14:38:28 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 15:05:08 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,14 @@
 
 char *resolve_host(const char *host);
 
-int	find_flag(char *flags_line)
+int	find_flag(char *flagsLine)
 {
 	char **flags = ft_split_no(FLAGS_LIST, ' ');
 	//checkNUll
 
 	for (int i = 0; i != FLAG_COUNT; i++)
 	{
-		if (ft_strcmp(flags_line, flags[i]))
+		if (ft_strcmp(flagsLine, flags[i]))
 		{
 			ft_free_split(flags);
 			return i + 1;
@@ -155,7 +155,7 @@ int	parse_file(char *filePath, t_nmap_data *data)
 	return 0;
 }
 
-int parse_speedup(char *threadCount, t_nmap_data *data)
+int	parse_speedup(char *threadCount, t_nmap_data *data)
 {
 	if (is_all_numbers(threadCount) == false)
 	{
@@ -170,6 +170,25 @@ int parse_speedup(char *threadCount, t_nmap_data *data)
 	}
 	data->threads_count = count;
 	return 0;
+}
+
+int	parse_scan(char *scanType, t_nmap_data *data)
+{
+	char **scanTypeList = ft_split_no(SCAN_LIST, ' ');
+	//checkNUll
+
+	for (int i = 0; i != FLAG_COUNT; i++)
+	{
+		if (ft_strcmp(scanType, scanTypeList[i]))
+		{
+			ft_free_split(scanTypeList);
+			data->scan_type = i + 1;
+			return 0;
+		}
+	}
+	ft_free_split(scanTypeList);
+	printf(UNKNOWN_SCAN, scanType);
+	return 1;
 }
 
 // return 0 si le prog doit continuer 1 si on doit fermer
@@ -216,6 +235,14 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 						return 1;
 					}
 					parse_speedup(argv[i], data);
+					break;
+				case SCAN_F:
+					if (++i >= argc)
+					{
+						printf(MISSING_ARG, argv[i - 1]);
+						return 1;
+					}
+					parse_scan(argv[i], data);
 					break;
 				default :
 					printf("%d\n", flagId);

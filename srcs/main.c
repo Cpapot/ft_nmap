@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 14:16:24 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 15:03:08 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,4 +33,6 @@ int	main(int argc, char **argv)
 		printf("%s\n", lst->content);
 		lst = lst->next;
 	}
+	printf("\n");
+	printf("scan type: %d", data.scan_type);
 }
