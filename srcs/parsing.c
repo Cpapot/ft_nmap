@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/12 15:54:20 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 14:10:02 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ int	parse_ports(char *portsStr, t_nmap_data *data)
 	return 0;
 }
 
-int parse_ip(char *ipStr, t_nmap_data *data)
+int	parse_ip(char *ipStr, t_nmap_data *data)
 {
 	char *host = resolve_host(ipStr);
 	if (host != NULL)
@@ -125,6 +125,33 @@ int parse_ip(char *ipStr, t_nmap_data *data)
 		printf(UNKNOWN_HOST, ipStr);
 		return 1;
 	}
+	return 0;
+}
+
+int	parse_file(char *filePath, t_nmap_data *data)
+{
+	char	*line;
+	int		fd = open(filePath, O_RDONLY);
+	if (fd == -1)
+	{
+		printf(CANT_OPEN_FILE, filePath);
+		return 1;
+	}
+	while ((line = get_next_line(fd)) != NULL)
+	{
+		size_t	len = ft_strlen(line);
+		if (len == 1 && line[0] == '\n')
+			continue;
+
+		if (len != 0)
+		{
+			line[len - 1] = 0;
+			parse_ip(line, data);
+			// check null
+		}
+		free(line);
+	}
+	close(fd);
 	return 0;
 }
 
@@ -157,6 +184,14 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 					}
 					parse_ip(argv[i], data);
 					break;
+				case FILE_F:
+					if (++i >= argc)
+					{
+						printf(MISSING_ARG, argv[i - 1]);
+						return 1;
+					}
+					parse_file(argv[i], data);
+					break;
 				default :
 					printf("%d\n", flagId);
 					break;
@@ -170,3 +205,4 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 	}
 	return 1;
 }
+// si ips est vide a la fin du parsing alors erreur

@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:25:27 by coco              #+#    #+#             */
-/*   Updated: 2025/11/12 15:24:21 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 13:51:30 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@
 # define MAX_PORT_REACHED "Max ports reached (1024), the remaining ports will not be scanned.\n"
 
 # define UNKNOWN_HOST "Unknown host: %s\n"
+
+# define CANT_OPEN_FILE "Error opening file: %s\n"
 
 bool	is_flags(char *str);
 bool	is_in_string(char a, char *str);
