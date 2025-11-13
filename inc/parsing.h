@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:25:27 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 13:51:30 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 14:35:13 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,11 @@
 # define UNKNOWN_HOST "Unknown host: %s\n"
 
 # define CANT_OPEN_FILE "Error opening file: %s\n"
+
+# define NO_IP "No IP specified, closing nmap\n"
+
+# define INVALID_SPEEDUP_PARAMETER "Invalid threads count parameter: %s\n"
+# define INVALID_THREAD_COUNT "The number of parallel threads must be between 1 and 255\n"
 
 bool	is_flags(char *str);
 bool	is_in_string(char a, char *str);

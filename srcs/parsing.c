@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 14:10:02 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 14:38:28 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,23 @@ int	parse_file(char *filePath, t_nmap_data *data)
 	return 0;
 }
 
+int parse_speedup(char *threadCount, t_nmap_data *data)
+{
+	if (is_all_numbers(threadCount) == false)
+	{
+		printf(INVALID_SPEEDUP_PARAMETER, threadCount);
+		return 1;
+	}
+	int count = ft_atoi(threadCount);
+	if (count > 1 && count >= 255)
+	{
+		printf(INVALID_THREAD_COUNT);
+		return 1;
+	}
+	data->threads_count = count;
+	return 0;
+}
+
 // return 0 si le prog doit continuer 1 si on doit fermer
 int	parsing(int argc, char **argv, t_nmap_data *data)
 {
@@ -192,6 +209,14 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 					}
 					parse_file(argv[i], data);
 					break;
+				case SPEEDUP_F:
+					if (++i >= argc)
+					{
+						printf(MISSING_ARG, argv[i - 1]);
+						return 1;
+					}
+					parse_speedup(argv[i], data);
+					break;
 				default :
 					printf("%d\n", flagId);
 					break;
@@ -203,6 +228,11 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 			return 1;
 		}
 	}
-	return 1;
+	if (data->ips == NULL)
+	{
+		printf(NO_IP);
+		return 1;
+	}
+	return 0;
 }
 // si ips est vide a la fin du parsing alors erreur

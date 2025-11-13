@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/11/12 15:55:34 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/13 14:16:24 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,7 @@ int	main(int argc, char **argv)
 {
 	t_nmap_data data;
 
-	ft_bzero(&data.ports, sizeof(int) * 1024);
-	data.allocated_data = NULL;
-	data.ports_count = 0;
-	data.ips = NULL;
+	ft_bzero(&data, sizeof(t_nmap_data));
 
 	parsing(argc, argv, &data);
 
