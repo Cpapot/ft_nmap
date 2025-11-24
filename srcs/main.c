@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 15:03:08 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/24 09:13:20 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@ int	main(int argc, char **argv)
 
 	ft_bzero(&data, sizeof(t_nmap_data));
 
-	parsing(argc, argv, &data);
+	if (parsing(argc, argv, &data))
+		return 1;
 
 	for (int i = 0; i != 1024 && data.ports[i] != 0; i++)
 	{

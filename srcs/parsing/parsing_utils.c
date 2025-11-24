@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:28:28 by coco              #+#    #+#             */
-/*   Updated: 2025/11/07 16:14:36 by coco             ###   ########.fr       */
+/*   Updated: 2025/11/24 10:10:36 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,4 +51,19 @@ bool	is_in_string(char a, char *str)
 			return true;
 	}
 	return false;
+}
+
+int		parsing_error(t_nmap_data *data, char *error_type, char *error_info, int ret_value)
+{
+	char	error_message[256];
+
+	snprintf(error_message, 256, "%s%s", ERROR_PRINT, error_type);
+	if (error_info == NULL)
+		printf("%s", error_message);
+	else
+		printf(error_message, error_info);
+
+	if (data)
+		stock_free(&data->allocated_data);
+	return ret_value;
 }

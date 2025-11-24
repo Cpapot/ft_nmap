@@ -9,9 +9,10 @@ HEADERS		=	nmap.h				\
 				parsing.h			\
 				network.h
 
-SRCS		=	main.c				\
-				parsing.c			\
-				parsing_utils.c		\
+SRCS		=	main.c						\
+				parsing/parsing.c			\
+				parsing/parsing_utils.c		\
+				parsing/parse_ports.c		\
 				network_utils.c
 
 LIBFTSRC	=	libftprintf.a libft.a printffd.a

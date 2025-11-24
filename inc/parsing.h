@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:25:27 by coco              #+#    #+#             */
-/*   Updated: 2025/11/13 15:04:35 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/24 10:10:53 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,10 @@
 # define FLAG_COUNT 6
 # define SCAN_LIST "SYN NULL FIN XMAS ACK UDP"
 # define SCAN_COUNT 6
+
+# define ERROR_PRINT "\e[1;31m[ERROR]: \e[0;37m"
+# define WARN_PRINT "\e[1;33m[WARN]: \e[0;37m"
+
 
 # define HELP_FLAG "Help Screen\nft_nmap [OPTIONS]\n--help Print this help screen\n\
 --ports ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)\n--ip ip addresses to scan in dot format\n\
@@ -44,10 +48,12 @@
 
 # define UNKNOWN_SCAN "The specified scan does not exist: %s\n"
 
+# define MALLOC_ERROR "Error during allocation, closing program\n"
+
 bool	is_flags(char *str);
 bool	is_in_string(char a, char *str);
 bool	is_all_numbers(char *str);
-
+int		parsing_error(t_nmap_data *data, char *error_type, char *error_info, int ret_value);
 
 enum	e_parsing_flags {
 	UNKNOWN_F = 0,
