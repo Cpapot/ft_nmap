@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:28:28 by coco              #+#    #+#             */
-/*   Updated: 2025/11/24 10:10:36 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/24 13:51:29 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,6 @@ int		parsing_error(t_nmap_data *data, char *error_type, char *error_info, int re
 		printf(error_message, error_info);
 
 	if (data)
-		stock_free(&data->allocated_data);
+		stock_free(&data->allocatedData);
 	return ret_value;
 }

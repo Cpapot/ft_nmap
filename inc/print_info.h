@@ -1,30 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   print_info.h                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/11/24 13:59:05 by cpapot           ###   ########.fr       */
+/*   Created: 2025/11/24 13:34:40 by cpapot            #+#    #+#             */
+/*   Updated: 2025/11/24 13:35:12 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "nmap.h"
+#ifndef PRINT_INFO
+# define PRINT_INFO
 
-int	parsing(int argc, char **argv, t_nmap_data *data);
 
-int	main(int argc, char **argv)
-{
-	t_nmap_data data;
-	ft_bzero(&data, sizeof(t_nmap_data));
 
-	if (parsing(argc, argv, &data))
-		return 1;
-
-	while (data.ips != NULL)
-	{
-		print_config(&data, data.ips->content);
-		data.ips = data.ips->next;
-	}
-}
+#endif

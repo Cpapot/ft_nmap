@@ -6,14 +6,14 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 09:17:24 by cpapot            #+#    #+#             */
-/*   Updated: 2025/11/24 10:11:23 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/24 13:51:44 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "parsing.h"
 
 // return false if max ports (1024) is exceed
-bool	add_port(int ports[1024], int *port_count, int portToAdd)
+static bool	add_port(int ports[1024], int *port_count, int portToAdd)
 {
 	for (int i = 0; i != 1024; i++)
 	{
@@ -27,7 +27,7 @@ bool	add_port(int ports[1024], int *port_count, int portToAdd)
 	return false;
 }
 
-int parse_ports_range(t_nmap_data *data, char* range, char *portsStr)
+static int parse_ports_range(t_nmap_data *data, char* range, char *portsStr)
 {
 	char **splittedRange = ft_split_no(range, '-');
 	if (!splittedRange)
@@ -56,7 +56,7 @@ int parse_ports_range(t_nmap_data *data, char* range, char *portsStr)
 
 	for (int range = startPort; range <= endPort; range++)
 	{
-		if (!add_port(data->ports, &data->ports_count, range))
+		if (!add_port(data->ports, &data->portsCount, range))
 		{
 			printf("%s%s", WARN_PRINT, MAX_PORT_REACHED);
 			return 2;
@@ -96,7 +96,7 @@ int	parse_ports(char *portsStr, t_nmap_data *data)
 				return parsing_error(data, INVALID_PORT, portsStr, 1);
 			}
 
-			if (!add_port(data->ports, &data->ports_count ,port))
+			if (!add_port(data->ports, &data->portsCount ,port))
 			{
 				ft_free_split(portSplit);
 				printf("%s%s", WARN_PRINT, MAX_PORT_REACHED);

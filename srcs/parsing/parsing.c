@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/24 10:24:12 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/11/24 13:59:23 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,10 @@ int	parse_ip(char *ipStr, t_nmap_data *data)
 	char *host = resolve_host(ipStr);
 	if (host != NULL)
 	{
-		char *ip = ft_strdup(host, &data->allocated_data);
+		char *ip = ft_strdup(host, &data->allocatedData);
 		if (!ip)
 			return parsing_error(data, MALLOC_ERROR, NULL, 1);
-		t_list *lst = ft_lstnew(ip, &data->allocated_data);
+		t_list *lst = ft_lstnew(ip, &data->allocatedData);
 		if (!lst)
 			return parsing_error(data, MALLOC_ERROR, NULL, 1);
 		ft_lstadd_back(&data->ips, lst);
@@ -81,9 +81,9 @@ int	parse_speedup(char *threadCount, t_nmap_data *data)
 	if (is_all_numbers(threadCount) == false)
 		return parsing_error(data, INVALID_SPEEDUP_PARAMETER, threadCount, 1);
 	int count = ft_atoi(threadCount);
-	if (count < 1 || count > 255)
+	if (count < 0 || count > 255)
 		return parsing_error(data, INVALID_THREAD_COUNT, NULL, 1);
-	data->threads_count = count;
+	data->threadsCount = count;
 	return 0;
 }
 
@@ -98,7 +98,7 @@ int	parse_scan(char *scanType, t_nmap_data *data)
 		if (ft_strcmp(scanType, scanTypeList[i]))
 		{
 			ft_free_split(scanTypeList);
-			data->scan_type = i + 1;
+			data->scanType = i + 1;
 			return 0;
 		}
 	}
@@ -151,6 +151,10 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 					if (parse_scan(argv[i], data))
 						return 1;
 					break;
+				case HELP_F:
+					printf(HELP_FLAG);
+					stock_free(&data->allocatedData);
+					return 1;
 			}
 		}
 		else
@@ -158,5 +162,11 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 	}
 	if (data->ips == NULL)
 		return parsing_error(data, NO_IP, NULL, 1);
+	if (data->ports[0] == 0)
+	{
+		data->portsCount = 1024;
+		for (int i = 0; i != 1024; i++)
+			data->ports[i] = i + 1;
+	}
 	return 0;
 }
