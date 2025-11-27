@@ -1,5 +1,4 @@
-#include "../../inc/nmap.h"
-#include "../../inc/network.h"
+#include "../../inc/scan.h"
 
 struct pseudo_header {
     uint32_t source_address;
@@ -49,9 +48,7 @@ uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
     return result;
 }
 
-int build_packet(char *datagram, char *source_ip, char *dest_ip,
-                     uint16_t source_port, uint16_t dest_port,
-                     enum e_nmap_scans_types scan_type) {
+int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_type) {
     struct iphdr *iph = (struct iphdr *)datagram;
     struct tcphdr *tcph = (struct tcphdr *)(datagram + sizeof(struct iphdr));
 
@@ -62,17 +59,18 @@ int build_packet(char *datagram, char *source_ip, char *dest_ip,
     iph->version = 4;
     iph->tos = 0;
     iph->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
-    iph->id = htons(rand() % 65535);  // ID random
+    iph->id = htons(rand() % 65535);
     iph->frag_off = 0;
     iph->ttl = 64;
     iph->protocol = IPPROTO_TCP;
-    iph->saddr = inet_addr(source_ip);
+    iph->saddr = 0;
     iph->daddr = inet_addr(dest_ip);
     iph->check = 0;
     iph->check = checksum(datagram, sizeof(struct iphdr));
 
     //=== TCP HEADER ===
-    tcph->source = htons(source_port);
+    // source port aléatoire entre 1024-65535
+    //tcph->source = htons(1024 + (rand() % (65535 - 1024)));
     tcph->dest = htons(dest_port);
     tcph->seq = htonl(rand());
     tcph->ack_seq = 0;
@@ -89,22 +87,23 @@ int build_packet(char *datagram, char *source_ip, char *dest_ip,
 
     // Flags according to scan type
     switch (scan_type) {
-        case SCAN_SYN:
+        case SYN:
             tcph->syn = 1;
             break;
-        case SCAN_NULL: // all flags to 0
+        case NULLMODE:
+            // all flags to 0
             break;
-        case SCAN_FIN:
+        case ACK:
+            tcph->ack = 1;
+            tcph->ack_seq = htonl(1);
+            break;
+        case FIN:
             tcph->fin = 1;
             break;
-        case SCAN_XMAS:
+        case XMAS:
             tcph->fin = 1;
             tcph->psh = 1;
             tcph->urg = 1;
-            break;
-        case SCAN_ACK:
-            tcph->ack = 1;
-            tcph->ack_seq = htonl(1);  // ACK nécessite un numéro
             break;
     }
 
@@ -115,9 +114,7 @@ int build_packet(char *datagram, char *source_ip, char *dest_ip,
     return sizeof(struct iphdr) + sizeof(struct tcphdr);
 }
 
-int send_tcp_packet(char *source_ip, char *dest_ip,
-                    uint16_t source_port, uint16_t dest_port,
-                    scan_type_t scan_type) {
+int send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
     int sockfd;
     char datagram[4096];
     struct sockaddr_in dest;
@@ -136,8 +133,7 @@ int send_tcp_packet(char *source_ip, char *dest_ip,
         return -1;
     }
 
-    int packet_size = build_tcp_packet(datagram, source_ip, dest_ip,
-                                       source_port, dest_port, scan_type);
+    int packet_size = build_packet(datagram, dest_ip, dest_port, scan_type);
 
     dest.sin_family = AF_INET;
     dest.sin_addr.s_addr = inet_addr(dest_ip);
@@ -149,17 +145,16 @@ int send_tcp_packet(char *source_ip, char *dest_ip,
         return -1;
     }
 
-    const char *scan_names[] = {"SYN", "NULL", "FIN", "XMAS", "ACK"};
-    printf("%s packet sent: %s:%d -> %s:%d\n",
-           scan_names[scan_type], source_ip, source_port, dest_ip, dest_port);
+    const char *scan_names[] = {"", "SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
+    printf("%s packet sent to %s:%d\n", scan_names[scan_type], dest_ip, dest_port);
 
     close(sockfd);
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 5) {
-        printf("Usage: %s <source_ip> <dest_ip> <source_port> <dest_port>\n", argv[0]);
+    if (argc < 3) {
+        printf("Usage: %s <dest_ip> <dest_port>\n", argv[0]);
         return 1;
     }
 
@@ -168,22 +163,25 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char *src_ip = argv[1];
-    char *dst_ip = argv[2];
-    uint16_t src_port = atoi(argv[3]);
-    uint16_t dst_port = atoi(argv[4]);
+    char *dst_ip = argv[1];
+    uint16_t dst_port = atoi(argv[2]);
 
     printf("=== Testing all TCP scans ===\n\n");
 
-    send_tcp_packet(src_ip, dst_ip, src_port, dst_port, SCAN_SYN);
+    printf("SYN:\n");
+    send_tcp_packet(dst_ip, dst_port, SYN);
     sleep(1);
-    send_tcp_packet(src_ip, dst_ip, src_port, dst_port, SCAN_NULL);
+    printf("NULL:\n");
+    send_tcp_packet(dst_ip, dst_port, NULLMODE);
     sleep(1);
-    send_tcp_packet(src_ip, dst_ip, src_port, dst_port, SCAN_FIN);
+    printf("FIN:\n");
+    send_tcp_packet(dst_ip, dst_port, FIN);
     sleep(1);
-    send_tcp_packet(src_ip, dst_ip, src_port, dst_port, SCAN_XMAS);
+    printf("XMAS:\n");
+    send_tcp_packet(dst_ip, dst_port, XMAS);
     sleep(1);
-    send_tcp_packet(src_ip, dst_ip, src_port, dst_port, SCAN_ACK);
+    printf("ACK:\n");
+    send_tcp_packet(dst_ip, dst_port, ACK);
 
     return 0;
 }

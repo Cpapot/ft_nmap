@@ -26,12 +26,12 @@
 
 enum e_nmap_scans_types {
 	ALL = 0,
-	SYN = 1,
-	NULLMODE = 2,
-	ACK = 3,
-	FIN = 4,
-	XMAS = 5,
-	UDP = 6,
+	SYN,
+	NULLMODE,
+	ACK,
+	FIN,
+	XMAS,
+	UDP,
 };
 
 //to do permettre dans le parsing de donner plusieur type de scan (--port UDP,SYN) et changer en int[6]
