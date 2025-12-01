@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/12/01 14:13:40 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/01 14:28:10 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ int	parse_ip(char *ipStr, t_nmap_data *data)
 		t_list *lst = ft_lstnew(ip, &data->allocatedData);
 		if (!lst)
 			return parsing_error(data, MALLOC_ERROR, NULL, 1);
+		data->ipCount++;
 		ft_lstadd_back(&data->ips, lst);
 	}
 	else
@@ -106,7 +107,11 @@ int	parse_scan(char *scanType, t_nmap_data *data)
 		{
 			if (ft_strcmp(scanTypeInputList[i], scanTypeList[y]))
 			{
-				data->scanType[y] = 1;
+				if (data->scanType[y] != 1)
+				{
+					data->scanCount++;
+					data->scanType[y] = 1;
+				}
 				break;
 			}
 			if (y + 1 == FLAG_COUNT)
@@ -183,6 +188,12 @@ int	parsing(int argc, char **argv, t_nmap_data *data)
 		data->portsCount = 1024;
 		for (int i = 0; i != 1024; i++)
 			data->ports[i] = i + 1;
+	}
+	if (data->scanCount == 0)
+	{
+		data->scanCount = 6;
+		for (int i = 0; i < SCAN_COUNT; i++)
+			data->scanType[i] = 1;
 	}
 	return 0;
 }

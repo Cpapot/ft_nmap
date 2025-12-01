@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:07:22 by coco              #+#    #+#             */
-/*   Updated: 2025/12/01 13:27:41 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/01 14:24:22 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,12 +45,15 @@ typedef struct s_unique_task
 typedef struct s_nmap_data
 {
 	int				scanType[6];			// le type de scan SYN, NULL, ACK, FIN, XMAS, UDP
+	int				scanCount;
 	int				ports[1024];		//count<=1024  default=[1->1024]
 	int				portsCount;
 	t_list			*ips;
+	int				ipCount;
 	int				threadsCount;		//nombre de thread			default = 0
 
 	t_unique_task	*uniqueTaskList;
+	int				taskCount;
 
 	t_memlist		*allocatedData;
 	int				exitStatus;
