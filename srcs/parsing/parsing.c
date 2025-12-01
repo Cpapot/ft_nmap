@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:23:42 by coco              #+#    #+#             */
-/*   Updated: 2025/11/24 13:59:23 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/01 14:13:40 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,17 +93,33 @@ int	parse_scan(char *scanType, t_nmap_data *data)
 	if (!scanTypeList)
 		return parsing_error(data, MALLOC_ERROR, NULL, 1);
 
-	for (int i = 0; i != FLAG_COUNT; i++)
+	char **scanTypeInputList = ft_split_no(scanType, ',');
+	if (!scanTypeInputList)
 	{
-		if (ft_strcmp(scanType, scanTypeList[i]))
+		ft_free_split(scanTypeList);
+		return parsing_error(data, MALLOC_ERROR, NULL, 1);
+	}
+
+	for (int i = 0; scanTypeInputList[i]; i++)
+	{
+		for (int y = 0; y != FLAG_COUNT; y++)
 		{
-			ft_free_split(scanTypeList);
-			data->scanType = i + 1;
-			return 0;
+			if (ft_strcmp(scanTypeInputList[i], scanTypeList[y]))
+			{
+				data->scanType[y] = 1;
+				break;
+			}
+			if (y + 1 == FLAG_COUNT)
+			{
+				ft_free_split(scanTypeList);
+				ft_free_split(scanTypeInputList);
+				return parsing_error(data, UNKNOWN_SCAN, scanType, 1);
+			}
 		}
 	}
+	ft_free_split(scanTypeInputList);
 	ft_free_split(scanTypeList);
-	return parsing_error(data, UNKNOWN_SCAN, scanType, 1);
+	return 0;
 }
 
 // return 0 si le prog doit continuer 1 si on doit fermer

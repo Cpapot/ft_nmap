@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:07:22 by coco              #+#    #+#             */
-/*   Updated: 2025/11/24 14:08:48 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/01 13:27:41 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,17 +33,27 @@ enum e_nmap_scans_types {
 	UDP,
 };
 
+typedef struct s_unique_task
+{
+	char	*ipToScan;
+	int		portToScan;
+	int		scanType;
+
+}	t_unique_task;
+
 //to do permettre dans le parsing de donner plusieur type de scan (--port UDP,SYN) et changer en int[6]
 typedef struct s_nmap_data
 {
-	int			scanType;			// le type de scan SYN, NULL, ACK, FIN, XMAS, UDP
-	int			ports[1024];		//count<=1024  default=[1->1024]
-	int			portsCount;
-	t_list		*ips;
-	int			threadsCount;		//nombre de thread			default = 0
+	int				scanType[6];			// le type de scan SYN, NULL, ACK, FIN, XMAS, UDP
+	int				ports[1024];		//count<=1024  default=[1->1024]
+	int				portsCount;
+	t_list			*ips;
+	int				threadsCount;		//nombre de thread			default = 0
 
-	t_memlist	*allocatedData;
-	int			exitStatus;
+	t_unique_task	*uniqueTaskList;
+
+	t_memlist		*allocatedData;
+	int				exitStatus;
 }	t_nmap_data;
 
 void	print_config(t_nmap_data *data, char *actualIp);
