@@ -1,30 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   nmap_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/12/01 13:41:03 by cpapot           ###   ########.fr       */
+/*   Created: 2025/12/01 13:13:46 by cpapot            #+#    #+#             */
+/*   Updated: 2025/12/01 13:39:34 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nmap.h"
 
-int	parsing(int argc, char **argv, t_nmap_data *data);
+// int		fill_unique_tasks(t_nmap_data *data)
+// {
 
-int	main(int argc, char **argv)
-{
-	t_nmap_data data;
-	ft_bzero(&data, sizeof(t_nmap_data));
-
-	if (parsing(argc, argv, &data))
-		return 1;
-
-	while (data.ips != NULL)
-	{
-		print_config(&data, data.ips->content);
-		data.ips = data.ips->next;
-	}
-}
+// }

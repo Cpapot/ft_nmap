@@ -8,14 +8,17 @@
 HEADERS		=	nmap.h				\
 				parsing.h			\
 				network.h			\
-				print_info.h
+				print_info.h		\
+				threads.h
 
 SRCS		=	main.c						\
 				parsing/parsing.c			\
 				parsing/parsing_utils.c		\
 				parsing/parse_ports.c		\
 				network_utils.c				\
-				print_info.c
+				print_info.c				\
+				threads.c					\
+				nmap_utils.c
 
 LIBFTSRC	=	libftprintf.a libft.a printffd.a
 
@@ -73,7 +76,7 @@ NAME		=	ft_nmap
 
 AR			=	ar rc
 
-CFLAGS		=	-Wall -Wextra -Werror
+CFLAGS		=	-Wall -Wextra -Werror -pthread
 
 CC			=	cc
 
