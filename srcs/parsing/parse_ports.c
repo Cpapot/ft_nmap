@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 09:17:24 by cpapot            #+#    #+#             */
-/*   Updated: 2025/11/24 13:51:44 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/01 14:31:53 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ static bool	add_port(int ports[1024], int *port_count, int portToAdd)
 	{
 		if (ports[i] == 0)
 		{
-			port_count++;
+			(*port_count)++;
 			ports[i] = portToAdd;
 			return true;
 		}
