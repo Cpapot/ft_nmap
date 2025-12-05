@@ -9,7 +9,8 @@ HEADERS		=	nmap.h				\
 				parsing.h			\
 				network.h			\
 				print_info.h		\
-				nmap_threads.h
+				nmap_threads.h		\
+				scan.h
 
 SRCS		=	main.c						\
 				parsing/parsing.c			\
@@ -18,7 +19,8 @@ SRCS		=	main.c						\
 				network_utils.c				\
 				print_info.c				\
 				nmap_threads.c				\
-				nmap_utils.c
+				nmap_utils.c				\
+				scan/scan.c
 
 LIBFTSRC	=	libftprintf.a libft.a printffd.a
 

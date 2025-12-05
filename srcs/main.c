@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/12/03 15:56:44 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/05 15:17:19 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,10 @@ int		parsing(int argc, char **argv, t_nmap_data *data);
 int		fill_unique_tasks(t_nmap_data *data);
 t_threads_tasks	*distribute_tasks(t_nmap_data *data);
 int		launch_threads(t_threads_data *threadsData, t_nmap_data *data);
+int		send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type);
+int		receiver();
+
+
 
 int	nmap_error(char *error, t_nmap_data *data, int doExit)
 {
@@ -48,6 +52,14 @@ int	main(int argc, char **argv)
 		t_threads_data	threadData;
 		threadData.distributedTasks = distribute_tasks(&data);
 		launch_threads(&threadData, &data);
+	}
+	else
+	{
+		for (int i = 0; i != data.taskCount; i++)
+		{
+			send_tcp_packet(data.uniqueTaskList[i].ipToScan, data.uniqueTaskList[i].portToScan, data.uniqueTaskList[i].scanType);
+			receiver();
+		}
 	}
 
 	// close thread to prevent leaks
