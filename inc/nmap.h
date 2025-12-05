@@ -6,7 +6,7 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:07:22 by coco              #+#    #+#             */
-/*   Updated: 2025/12/03 15:54:12 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/05 14:00:05 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 # define ERROR_PRINT "\e[1;31m[ERROR]: \e[0;37m"
 # define WARN_PRINT "\e[1;33m[WARN]: \e[0;37m"
 # define MALLOC_ERROR "Error during allocation, closing program\n"
+# define THREAD_ERROR "Error during threads creation, closing program\n"
 
 # define SCAN_LIST "SYN NULL FIN XMAS ACK UDP"
 # define SCAN_COUNT 6

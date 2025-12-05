@@ -6,13 +6,12 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/01 13:00:38 by cpapot            #+#    #+#             */
-/*   Updated: 2025/12/03 15:55:35 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/05 14:14:58 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nmap_threads.h"
 
-//GERER LE CAS OU ON A PLUS DE THREAD QUE DE TASK (mettre distributedTask[i] a null et ne pas lancer les threads concerné)
 t_threads_tasks	*distribute_tasks(t_nmap_data *data)
 {
 	int	taskPerThread = data->taskCount / data->threadsCount;
@@ -54,8 +53,16 @@ int	launch_threads(t_threads_data *threadsData, t_nmap_data *data)
 
 	for (int i = 0; i != data->threadsCount; i++)
 	{
-		pthread_create(&threadsData->pthreadArray[i], NULL, thread_routine, &threadsData->distributedTasks[i]);
-		// check return if needed
+		if (pthread_create(&threadsData->pthreadArray[i], NULL, thread_routine, &threadsData->distributedTasks[i]))
+		{
+			for (int j = 0; j != i; j++)
+				pthread_join(threadsData->pthreadArray[j], NULL);
+			nmap_error(THREAD_ERROR, data, 1);
+		}
 	}
+
+	for (int i = 0; i != data->threadsCount; i++)
+		pthread_join(threadsData->pthreadArray[i], NULL);
+
 	return 0;
 }
