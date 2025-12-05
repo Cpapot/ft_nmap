@@ -8,7 +8,56 @@ struct pseudo_header {
     uint16_t tcp_length;
 };
 
-// Calcul du checksum (identique à ping)
+int get_local_ip(const char *dest_ip, char *output_ip) {
+    int sock = socket(AF_INET, SOCK_DGRAM, 0); 
+    if (sock < 0) {
+        perror("get_local_ip: socket failed");
+        return -1;
+    }
+
+    struct sockaddr_in serv;
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr(dest_ip);
+    serv.sin_port = htons(60000); 
+
+    if (connect(sock, (const struct sockaddr *)&serv, sizeof(serv)) < 0) {
+        perror("get_local_ip: connect failed"); 
+        close(sock);
+        return -1;
+    }
+
+    struct sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+
+    if (getsockname(sock, (struct sockaddr *)&name, &namelen) < 0) {
+        perror("get_local_ip: getsockname failed");
+        close(sock);
+        return -1;
+    }
+
+    close(sock);
+
+    if (inet_ntop(AF_INET, &name.sin_addr, output_ip, INET_ADDRSTRLEN) == NULL) {
+        perror("get_local_ip: inet_ntop failed");
+        return -1;
+    }
+
+    return 0;
+}
+
+uint16_t get_src_port_for_scan(int scan_type) {
+    switch (scan_type) {
+        case SYN:  return SRC_PORT_SYN;
+        case NULLMODE:  return SRC_PORT_NULL;
+        case ACK: return SRC_PORT_ACK;
+        case FIN: return SRC_PORT_FIN;
+        case XMAS: return SRC_PORT_XMAS;
+        case UDP: return SRC_PORT_UDP;
+        default:        return 33000 + scan_type;
+    }
+}
+
 uint16_t checksum(void *b, int len) {
     uint16_t *buf = b;
     uint32_t sum = 0;
@@ -51,6 +100,10 @@ uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
 int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_type) {
     struct iphdr *iph = (struct iphdr *)datagram;
     struct tcphdr *tcph = (struct tcphdr *)(datagram + sizeof(struct iphdr));
+    char my_ip[INET_ADDRSTRLEN];
+
+    get_local_ip(dest_ip, my_ip);
+    printf("MY IP %s\n", my_ip);
 
     memset(datagram, 0, 4096);
 
@@ -63,14 +116,13 @@ int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_typ
     iph->frag_off = 0;
     iph->ttl = 64;
     iph->protocol = IPPROTO_TCP;
-    iph->saddr = 0;
+    iph->saddr = inet_addr(my_ip);
     iph->daddr = inet_addr(dest_ip);
     iph->check = 0;
     iph->check = checksum(datagram, sizeof(struct iphdr));
 
     //=== TCP HEADER ===
-    // source port aléatoire entre 1024-65535
-    //tcph->source = htons(1024 + (rand() % (65535 - 1024)));
+    tcph->source = htons(get_src_port_for_scan(scan_type));
     tcph->dest = htons(dest_port);
     tcph->seq = htonl(rand());
     tcph->ack_seq = 0;
@@ -152,6 +204,71 @@ int send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
     return 0;
 }
 
+int receiver() {
+    int sockfd;
+    fd_set readfds;
+    struct timeval timeout;
+    char buffer[65536];
+    struct sockaddr_in saddr;
+    int saddr_len = sizeof(saddr);
+    ssize_t data_size;
+
+    sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+    if (sockfd < 0) {
+        perror("socket");
+        return -1;
+    }
+    
+    while (1) {
+        FD_ZERO(&readfds);
+        FD_SET(sockfd, &readfds);
+
+        timeout.tv_sec = 5;
+        timeout.tv_usec = 0;
+
+        int activity = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
+        if (activity < 0) {
+            perror("select");
+            close(sockfd);
+            return -1;
+        } else if (activity == 0) {
+            printf("Timeout waiting for packets.\n");
+            continue;
+        }
+
+        if (FD_ISSET(sockfd, &readfds)) {
+            data_size = recvfrom(sockfd, buffer, sizeof(buffer), 0,
+                                 (struct sockaddr *)&saddr, (socklen_t *)&saddr_len);
+            if (data_size < 0) {
+                perror("recvfrom");
+                close(sockfd);
+                return -1;
+            }
+
+            struct iphdr *iph = (struct iphdr *)buffer;
+            struct tcphdr *tcph = (struct tcphdr *)(buffer + iph->ihl * 4);
+            
+            //Vérifier si c'est un de NOS ports source (33001-33006) ===
+            uint16_t received_src_port = ntohs(tcph->dest);  // ton ancien src_port !
+            if (received_src_port < 33001 || received_src_port > 33006) {
+                continue;  // Ignorer les paquets qui ne nous concernent pas
+            }
+            
+            // C'est un de NOS scans
+            printf("Received OUR scan response from %s (src_port=%d): ", 
+                   inet_ntoa(saddr.sin_addr), received_src_port);
+            if (tcph->syn && tcph->ack) {
+                printf("SYN-ACK\n");
+            } else if (tcph->rst) {
+                printf("RST\n");
+            } else {
+                printf("Other TCP flags (0x%x)\n", tcph->th_flags);
+            }
+        }
+    }
+}
+
+
 int main(int argc, char *argv[]) {
     if (argc < 3) {
         printf("Usage: %s <dest_ip> <dest_port>\n", argv[0]);
@@ -171,17 +288,23 @@ int main(int argc, char *argv[]) {
     printf("SYN:\n");
     send_tcp_packet(dst_ip, dst_port, SYN);
     sleep(1);
+    receiver();
     printf("NULL:\n");
     send_tcp_packet(dst_ip, dst_port, NULLMODE);
     sleep(1);
+    receiver();
     printf("FIN:\n");
     send_tcp_packet(dst_ip, dst_port, FIN);
+    receiver();
     sleep(1);
     printf("XMAS:\n");
+    receiver();
     send_tcp_packet(dst_ip, dst_port, XMAS);
     sleep(1);
+    receiver();
     printf("ACK:\n");
     send_tcp_packet(dst_ip, dst_port, ACK);
+    receiver();
 
     return 0;
 }

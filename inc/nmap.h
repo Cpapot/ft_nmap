@@ -24,7 +24,7 @@
 # define SCAN_LIST "SYN NULL FIN XMAS ACK UDP"
 # define SCAN_COUNT 6
 
-enum e_nmap_scans_types {
+typedef enum e_nmap_scans_types {
 	ALL = 0,
 	SYN,
 	NULLMODE,
@@ -32,7 +32,7 @@ enum e_nmap_scans_types {
 	FIN,
 	XMAS,
 	UDP,
-};
+} e_nmap_scans_types;
 
 //to do permettre dans le parsing de donner plusieur type de scan (--port UDP,SYN) et changer en int[6]
 typedef struct s_nmap_data
@@ -55,6 +55,17 @@ typedef enum {
     PORT_OPEN_FILTERED,
     PORT_UNFILTERED
 } e_port_status;
+
+typedef struct s_scan_result {
+    e_nmap_scans_types  type;
+    e_port_status state;
+    int          answered;   // 0/1
+}   t_scan_result;
+
+typedef struct s_port_result {
+    uint16_t        port;
+    t_scan_result   scans[SCAN_COUNT]; // indexé par type de scan
+}   t_port_result;
 
 // Paramètres de scan (passer en argument aux fonctions de scan)
 typedef struct s_scan_params {
