@@ -6,14 +6,27 @@
 /*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/12/01 14:58:32 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/03 15:56:44 by cpapot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nmap.h"
+#include "nmap_threads.h"
 
 int		parsing(int argc, char **argv, t_nmap_data *data);
 int		fill_unique_tasks(t_nmap_data *data);
+t_threads_tasks	*distribute_tasks(t_nmap_data *data);
+int		launch_threads(t_threads_data *threadsData, t_nmap_data *data);
+
+int	nmap_error(char *error, t_nmap_data *data, int doExit)
+{
+	printf("%s %s", ERROR_PRINT, error);
+	stock_free(&data->allocatedData);
+	if (doExit == 1)
+		exit(1);
+	else
+		return 1;
+}
 
 int	main(int argc, char **argv)
 {
@@ -28,10 +41,15 @@ int	main(int argc, char **argv)
 	// 	print_config(&data, data.ips->content);
 	// 	data.ips = data.ips->next;
 	// }
-	fill_unique_tasks(&data);
 
-	for (int i = 0; i != data.taskCount; i++)
+	fill_unique_tasks(&data);
+	if (data.threadsCount > 1)
 	{
-		printf("ip: %s, port: %d, scan; %d\n", data.uniqueTaskList[i].ipToScan, data.uniqueTaskList[i].portToScan, data.uniqueTaskList[i].scanType);
+		t_threads_data	threadData;
+		threadData.distributedTasks = distribute_tasks(&data);
+		launch_threads(&threadData, &data);
 	}
+
+	// close thread to prevent leaks
+	stock_free(&data.allocatedData);
 }
