@@ -24,15 +24,16 @@
 
 # define SCAN_LIST "SYN NULL FIN XMAS ACK UDP"
 # define SCAN_COUNT 6
-enum e_nmap_scans_types {
+
+typedef enum e_nmap_scans_types {
 	ALL = 0,
-	SYN = 1,
+	SYN,
 	NULLMODE,
 	ACK,
 	FIN,
 	XMAS,
 	UDP,
-};
+} e_nmap_scans_types;
 
 typedef struct s_unique_task
 {
@@ -60,6 +61,34 @@ typedef struct s_nmap_data
 	t_memlist		*allocatedData;
 	int				exitStatus;
 }	t_nmap_data;
+
+// Statut des ports
+typedef enum {
+    PORT_OPEN,
+    PORT_CLOSED,
+    PORT_FILTERED,
+    PORT_OPEN_FILTERED,
+    PORT_UNFILTERED
+} e_port_status;
+
+typedef struct s_scan_result {
+    e_nmap_scans_types  type;
+    e_port_status state;
+    int          answered;   // 0/1
+}   t_scan_result;
+
+typedef struct s_port_result {
+    uint16_t        port;
+    t_scan_result   scans[SCAN_COUNT]; // indexé par type de scan
+}   t_port_result;
+
+// Paramètres de scan (passer en argument aux fonctions de scan)
+typedef struct s_scan_params {
+    char *target_ip;
+    uint16_t port;
+    char *source_ip;  // Pour le spoofing (bonus)
+    int timeout_ms;
+} t_scan_params;
 
 void	print_config(t_nmap_data *data, char *actualIp);
 int		nmap_error(char *error, t_nmap_data *data, int doExit);
