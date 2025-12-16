@@ -196,65 +196,53 @@ int send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
 }
 
 
-int receiver() {
-    int sockfd;
+int get_scan_type(struct tcphdr *tcph){
+    
+    // TODO
+    if (tcph)
+        return 1;
+    return 1;
+}
+
+int receiver(t_port_result *results) {
+    int sock_tcp, sock_icmp;
     fd_set readfds;
     struct timeval timeout;
     char buffer[65536];
     struct sockaddr_in saddr;
     int saddr_len = sizeof(saddr);
 
-    sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
-    if (sockfd < 0) {
-        perror("socket");
+    sock_tcp = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+    sock_icmp = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+
+    if (sock_tcp < 0 || sock_icmp < 0)
         return -1;
-    }
-    
+        
     while (1) {
         FD_ZERO(&readfds);
-        FD_SET(sockfd, &readfds);
+        FD_SET(sock_tcp, &readfds);
+        FD_SET(sock_icmp, &readfds);
 
-        timeout.tv_sec = 5;
+        timeout.tv_sec = 1;
         timeout.tv_usec = 0;
+        int max_fd = (sock_tcp > sock_icmp ? sock_tcp : sock_icmp);
+        if (select(max_fd,  &readfds, NULL, NULL, &timeout) < 0 ) continue;
 
-        int activity = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
-        if (activity < 0) {
-            perror("select");
-            close(sockfd);
-            return -1;
-        }
-
-        if (FD_ISSET(sockfd, &readfds)) {
-                recvfrom(sockfd, buffer, sizeof(buffer), 0,
-                                 (struct sockaddr *)&saddr, (socklen_t *)&saddr_len);
+        if (FD_ISSET(sock_tcp, &readfds)) {
+            recvfrom(sock_tcp, buffer, sizeof(buffer), 0,
+                     (struct sockaddr *)&saddr, (socklen_t *)&saddr_len);
             
             struct iphdr *iph = (struct iphdr *)buffer;
             struct tcphdr *tcph = (struct tcphdr *)(buffer + iph->ihl * 4);
             
             //Vérifier si c'est un de NOS ports source (33001-33006) ===
             uint16_t received_src_port = ntohs(tcph->dest);
-            if (received_src_port < 33001 || received_src_port > 33006) {
+            uint16_t port = ntohs(tcph->source);
+
+            if (received_src_port < 33001 || received_src_port > 33006)
                 continue;  // Ignorer les paquets qui ne nous concernent pas
-            }
-            
-            // C'est un de NOS scans
-            printf("Received OUR scan response from %s (src_port=%d):", 
-               inet_ntoa(saddr.sin_addr), received_src_port);
-            if (tcph->syn == 1){
-                printf(" SYN \n");
-            }
-            else if (tcph->ack == 1 && tcph->ack_seq == htonl(1)){
-                printf(" ACK\n");
-            }            
-            else if (tcph->fin == 1){
-                printf(" FIN \n");
-            }
-            else if (tcph->fin == 1 && tcph->psh == 1 && tcph->urg == 1) {
-                printf(" XMAS \n");
-            }
-            else {
-                printf(" NULLMODE \n");
-            }
+
+            results[port].scans[get_scan_type(tcph)].answered = 1;
         }
     }
 }

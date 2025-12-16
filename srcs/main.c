@@ -18,12 +18,12 @@ int		fill_unique_tasks(t_nmap_data *data);
 t_threads_tasks	*distribute_tasks(t_nmap_data *data);
 int		launch_threads(t_threads_data *threadsData, t_nmap_data *data);
 int		send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type);
-int		receiver();
+int		receiver(t_port_result *results);
 
 
 void *sniffer_routine(void *arg) {
-	(void)arg;
-	receiver();
+	t_port_result *ports_results = (t_port_result *)arg;
+	receiver(ports_results);
 	return NULL;
 }
 
@@ -41,7 +41,9 @@ int	main(int argc, char **argv)
 {
 	t_nmap_data data;
 	pthread_t sniffer_thread;
+	t_port_result ports_results[65536];
 
+	ft_bzero(&ports_results, sizeof(ports_results));
 	ft_bzero(&data, sizeof(t_nmap_data));
 
 	if (parsing(argc, argv, &data))
@@ -49,7 +51,7 @@ int	main(int argc, char **argv)
 
 	fill_unique_tasks(&data);
 
-	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, NULL) != 0)
+	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, ports_results) != 0)
 		return (nmap_error("Thread error",  &data, 1));
 	sleep(1);
 
@@ -67,11 +69,24 @@ int	main(int argc, char **argv)
 			usleep(1000);
 		}
 	}
+
+	//later add retry here instead
 	printf("Scan finished. Waiting for late packets\n");
 	sleep(10);
 
 	pthread_cancel(sniffer_thread);
 	pthread_join(sniffer_thread, NULL);
-	// close thread to prevent leaks
 	stock_free(&data.allocatedData);
+
+	// test print
+	// printf("\n%-10s %-10s %-15s\n", "PORT", "STATE", "SERVICE");
+	
+	// for (int port = 0; port < 65536; port++)
+	// {
+	//     if (ports_results[port].port != NULL)
+	//     {
+	//         printf("%-5d/tcp   %-10s %-15s\n", port, "open", "syn-ack");
+	//     }
+	// }
+	return 0;
 }

@@ -56,15 +56,13 @@ typedef struct s_nmap_data
 	t_unique_task	*uniqueTaskList;
 	int				taskCount;
 
-
-
 	t_memlist		*allocatedData;
 	int				exitStatus;
 }	t_nmap_data;
 
 // Statut des ports
 typedef enum {
-    PORT_OPEN,
+    PORT_OPEN = 0,
     PORT_CLOSED,
     PORT_FILTERED,
     PORT_OPEN_FILTERED,
