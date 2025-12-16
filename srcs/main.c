@@ -21,6 +21,11 @@ int		send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type);
 int		receiver();
 
 
+void *sniffer_routine(void *arg) {
+	(void)arg;
+	receiver();
+	return NULL;
+}
 
 int	nmap_error(char *error, t_nmap_data *data, int doExit)
 {
@@ -35,18 +40,19 @@ int	nmap_error(char *error, t_nmap_data *data, int doExit)
 int	main(int argc, char **argv)
 {
 	t_nmap_data data;
+	pthread_t sniffer_thread;
+
 	ft_bzero(&data, sizeof(t_nmap_data));
 
 	if (parsing(argc, argv, &data))
 		return 1;
 
-	// while (data.ips != NULL)
-	// {
-	// 	print_config(&data, data.ips->content);
-	// 	data.ips = data.ips->next;
-	// }
-
 	fill_unique_tasks(&data);
+
+	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, NULL) != 0)
+		return (nmap_error("Thread error",  &data, 1));
+	sleep(1);
+
 	if (data.threadsCount > 1)
 	{
 		t_threads_data	threadData;
@@ -58,10 +64,14 @@ int	main(int argc, char **argv)
 		for (int i = 0; i != data.taskCount; i++)
 		{
 			send_tcp_packet(data.uniqueTaskList[i].ipToScan, data.uniqueTaskList[i].portToScan, data.uniqueTaskList[i].scanType);
-			receiver();
+			usleep(1000);
 		}
 	}
+	printf("Scan finished. Waiting for late packets\n");
+	sleep(10);
 
+	pthread_cancel(sniffer_thread);
+	pthread_join(sniffer_thread, NULL);
 	// close thread to prevent leaks
 	stock_free(&data.allocatedData);
 }
