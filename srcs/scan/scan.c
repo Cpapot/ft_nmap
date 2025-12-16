@@ -203,7 +203,6 @@ int receiver() {
     char buffer[65536];
     struct sockaddr_in saddr;
     int saddr_len = sizeof(saddr);
-    // ssize_t data_size;
 
     sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sockfd < 0) {
@@ -226,7 +225,6 @@ int receiver() {
         }
 
         if (FD_ISSET(sockfd, &readfds)) {
-            // data_size =
                 recvfrom(sockfd, buffer, sizeof(buffer), 0,
                                  (struct sockaddr *)&saddr, (socklen_t *)&saddr_len);
             
@@ -235,21 +233,27 @@ int receiver() {
             
             //Vérifier si c'est un de NOS ports source (33001-33006) ===
             uint16_t received_src_port = ntohs(tcph->dest);
-           printf("Received from %s (src_port=%d): \n'", 
-                   inet_ntoa(saddr.sin_addr), received_src_port);
             if (received_src_port < 33001 || received_src_port > 33006) {
                 continue;  // Ignorer les paquets qui ne nous concernent pas
             }
             
             // C'est un de NOS scans
-            printf("Received OUR scan response from %s (src_port=%d): \n", 
-                   inet_ntoa(saddr.sin_addr), received_src_port);
-            if (tcph->syn && tcph->ack) {
-                printf("SYN-ACK\n");
-            } else if (tcph->rst) {
-                printf("RST\n");
-            } else {
-                printf("Other TCP flags (0x%x)\n", tcph->th_flags);
+            printf("Received OUR scan response from %s (src_port=%d):", 
+               inet_ntoa(saddr.sin_addr), received_src_port);
+            if (tcph->syn == 1){
+                printf(" SYN \n");
+            }
+            else if (tcph->ack == 1 && tcph->ack_seq == htonl(1)){
+                printf(" ACK\n");
+            }            
+            else if (tcph->fin == 1){
+                printf(" FIN \n");
+            }
+            else if (tcph->fin == 1 && tcph->psh == 1 && tcph->urg == 1) {
+                printf(" XMAS \n");
+            }
+            else {
+                printf(" NULLMODE \n");
             }
         }
     }
