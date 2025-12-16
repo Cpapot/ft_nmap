@@ -78,7 +78,7 @@ uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
     char *pseudogram;
     int psize;
     uint16_t result;
-
+    ft_bzero(&psh, sizeof(struct pseudo_header));
     // build pseudo header
     psh.source_address = iph->saddr;
     psh.dest_address = iph->daddr;
@@ -100,10 +100,6 @@ uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
 int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_type) {
     struct iphdr *iph = (struct iphdr *)datagram;
     struct tcphdr *tcph = (struct tcphdr *)(datagram + sizeof(struct iphdr));
-    char my_ip[INET_ADDRSTRLEN];
-
-    get_local_ip(dest_ip, my_ip);
-    printf("MY IP %s\n", my_ip);
 
     memset(datagram, 0, 4096);
 
@@ -111,12 +107,12 @@ int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_typ
     iph->ihl = 5;
     iph->version = 4;
     iph->tos = 0;
-    iph->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
+    iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr));
     iph->id = htons(rand() % 65535);
     iph->frag_off = 0;
     iph->ttl = 64;
     iph->protocol = IPPROTO_TCP;
-    iph->saddr = inet_addr(my_ip);
+    //iph->saddr = inet_addr(my_ip);
     iph->daddr = inet_addr(dest_ip);
     iph->check = 0;
     iph->check = checksum(datagram, sizeof(struct iphdr));
@@ -218,38 +214,42 @@ int receiver() {
         perror("socket");
         return -1;
     }
-    
+    printf("Sniffer thread started\n");
+
     while (1) {
+        printf("TEST\n");
+        fflush(stdout);
         FD_ZERO(&readfds);
         FD_SET(sockfd, &readfds);
 
-        timeout.tv_sec = 5;
-        timeout.tv_usec = 0;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100000;
 
         int activity = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
         if (activity < 0) {
-            perror("select");
-            close(sockfd);
-            return -1;
-        } else if (activity == 0) {
-            printf("Timeout waiting for packets.\n");
+          if (errno == EINTR)
             continue;
+          perror("select error(ignored)");
+          continue;
         }
 
         if (FD_ISSET(sockfd, &readfds)) {
             data_size = recvfrom(sockfd, buffer, sizeof(buffer), 0,
                                  (struct sockaddr *)&saddr, (socklen_t *)&saddr_len);
             if (data_size < 0) {
-                perror("recvfrom");
-                close(sockfd);
-                return -1;
+                // perror("recvfrom");
+                // close(sockfd);
+                // return -1;
+                continue;
             }
 
             struct iphdr *iph = (struct iphdr *)buffer;
             struct tcphdr *tcph = (struct tcphdr *)(buffer + iph->ihl * 4);
             
             //Vérifier si c'est un de NOS ports source (33001-33006) ===
-            uint16_t received_src_port = ntohs(tcph->dest);  // ton ancien src_port !
+            uint16_t received_src_port = ntohs(tcph->dest);
+            printf("Received OUR scan response from %s (src_port=%d): ", 
+                   inet_ntoa(saddr.sin_addr), received_src_port);
             if (received_src_port < 33001 || received_src_port > 33006) {
                 continue;  // Ignorer les paquets qui ne nous concernent pas
             }
@@ -266,6 +266,7 @@ int receiver() {
             }
         }
     }
+<<<<<<< Updated upstream
 }
 
 
@@ -308,3 +309,8 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+=======
+  close(sockfd);
+  return 0;
+}
+>>>>>>> Stashed changes
