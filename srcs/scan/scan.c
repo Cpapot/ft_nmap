@@ -188,20 +188,58 @@ int send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
         return -1;
     }
 
-    const char *scan_names[] = {"", "SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
-    printf("%s packet sent to %s:%d\n", scan_names[scan_type], dest_ip, dest_port);
-
     close(sockfd);
     return 0;
 }
 
 
-int get_scan_type(struct tcphdr *tcph){
-    
-    // TODO
-    if (tcph)
-        return 1;
-    return 1;
+void packet_parsing(t_port_result *result, char * buffer) {
+     struct iphdr *iph = (struct iphdr *)buffer;
+
+     // ==== TCP ===
+     if (iph->protocol == IPPROTO_TCP) {
+        struct tcphdr *tcph = (struct tcphdr *)(buffer + iph->ihl * 4);
+        uint16_t scanned_port = ntohs(tcph->source); 
+        uint16_t src_port = ntohs(tcph->dest);
+        int scan_type = src_port - 33000;
+        int scan_index = scan_type -1;
+
+        if (src_port < 33001 || src_port > 33006)
+            return;
+
+        result[scanned_port].scans[scan_index].answered = true;
+
+        if (scan_type == SYN){
+                if (tcph->syn && tcph->ack)
+                   result[scanned_port].scans[scan_index].state = PORT_OPEN;
+               else if (tcph->rst)
+                   result[scanned_port].scans[scan_index].state = PORT_CLOSED;
+        }
+        else if (scan_type == ACK) {
+            if (tcph->rst)
+                   result[scanned_port].scans[scan_index].state = PORT_UNFILTERED;
+        }
+        else { // NULL, FIN, XMAS
+            if (tcph->rst)
+                   result[scanned_port].scans[scan_index].state = PORT_CLOSED;
+        }
+    }
+
+    // ==== ICMP (UDP Error)
+    else if (iph->protocol == IPPROTO_ICMP) {
+        struct icmphdr *icmph = (struct icmphdr *)(buffer + (iph->ihl * 4));
+
+        // 3: Dest Unreachable
+        if (icmph->type == 3 && icmph->code == 3) {
+            
+            struct iphdr *orig_iph = (struct iphdr *)((char *)icmph + 8);
+            struct udphdr *orig_udph = (struct udphdr *)((char *)orig_iph + (orig_iph->ihl * 4));
+
+            uint16_t scanned_port = ntohs(orig_udph->dest);
+            result[scanned_port].scans[UDP - 1].answered = 1;
+            result[scanned_port].scans[UDP - 1].state = PORT_CLOSED;
+        }
+    }
 }
 
 int receiver(t_port_result *results) {
@@ -209,8 +247,6 @@ int receiver(t_port_result *results) {
     fd_set readfds;
     struct timeval timeout;
     char buffer[65536];
-    struct sockaddr_in saddr;
-    int saddr_len = sizeof(saddr);
 
     sock_tcp = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     sock_icmp = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -226,23 +262,18 @@ int receiver(t_port_result *results) {
         timeout.tv_sec = 1;
         timeout.tv_usec = 0;
         int max_fd = (sock_tcp > sock_icmp ? sock_tcp : sock_icmp);
-        if (select(max_fd,  &readfds, NULL, NULL, &timeout) < 0 ) continue;
+        if (select(max_fd,  &readfds, NULL, NULL, &timeout) < 0 )
+            continue;
 
         if (FD_ISSET(sock_tcp, &readfds)) {
-            recvfrom(sock_tcp, buffer, sizeof(buffer), 0,
-                     (struct sockaddr *)&saddr, (socklen_t *)&saddr_len);
-            
-            struct iphdr *iph = (struct iphdr *)buffer;
-            struct tcphdr *tcph = (struct tcphdr *)(buffer + iph->ihl * 4);
-            
-            //Vérifier si c'est un de NOS ports source (33001-33006) ===
-            uint16_t received_src_port = ntohs(tcph->dest);
-            uint16_t port = ntohs(tcph->source);
-
-            if (received_src_port < 33001 || received_src_port > 33006)
-                continue;  // Ignorer les paquets qui ne nous concernent pas
-
-            results[port].scans[get_scan_type(tcph)].answered = 1;
+            if (recvfrom(sock_tcp, buffer, sizeof(buffer), 0, NULL, NULL) > 0)
+                packet_parsing(results, buffer);
+        }
+        if (FD_ISSET(sock_icmp, &readfds)) {
+          if (recvfrom(sock_icmp, buffer, sizeof(buffer), 0, NULL, NULL) > 0)
+              packet_parsing(results, buffer);
         }
     }
+    close(sock_tcp);
+    close(sock_icmp);
 }

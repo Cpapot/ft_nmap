@@ -16,6 +16,7 @@
 # include "../libft/includes/libft.h"
 # include <stdio.h>
 # include <stdlib.h>
+# include <netdb.h>
 
 # define ERROR_PRINT "\e[1;31m[ERROR]: \e[0;37m"
 # define WARN_PRINT "\e[1;33m[WARN]: \e[0;37m"
@@ -72,7 +73,7 @@ typedef enum {
 typedef struct s_scan_result {
     e_nmap_scans_types  type;
     e_port_status state;
-    int          answered;   // 0/1
+    bool          answered;   // 0/1
 }   t_scan_result;
 
 typedef struct s_port_result {

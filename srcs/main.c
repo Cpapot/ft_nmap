@@ -37,6 +37,38 @@ int	nmap_error(char *error, t_nmap_data *data, int doExit)
 		return 1;
 }
 
+void print_scan_report(t_port_result *results, t_nmap_data data) {
+    struct servent *service;
+    
+    printf("\n%-10s %-15s %-20s %-30s\n", "PORT", "TYPE", "STATE", "SERVICE");
+    printf("--------------------------------------------------------------------------\n");
+
+    for (int port = 0; port < 1024; port++) {
+	    	if (data.ports[port]) {
+	        if (results[port].scans[SYN - 1].state == PORT_OPEN) {
+	            
+	            service = getservbyport(htons(port), "tcp");
+	            
+	            printf("%-10d %-15s \033[1;32m%-20s\033[0m %-30s\n", 
+	                   data.ports[port], 
+	                   "TCP (SYN)", 
+	                   "OPEN", 
+	                   (service ? service->s_name : "unknown"));
+	        }
+	
+	        if (results[port].scans[UDP - 1].answered == false) {
+	             service = getservbyport(htons(port), "udp");
+	             printf("%-10d %-15s \033[0;33m%-20s\033[0m %-30s\n", 
+	                   data.ports[port], 
+	                   "UDP", 
+	                   "OPEN|FILTERED", 
+	                   (service ? service->s_name : "unknown"));
+	        }
+  	  	printf("\n");
+	    }
+  	}
+}
+
 int	main(int argc, char **argv)
 {
 	t_nmap_data data;
@@ -70,23 +102,14 @@ int	main(int argc, char **argv)
 		}
 	}
 
-	//later add retry here instead
-	printf("Scan finished. Waiting for late packets\n");
-	sleep(10);
+	//later add retry here
+	sleep(1);
 
 	pthread_cancel(sniffer_thread);
 	pthread_join(sniffer_thread, NULL);
 	stock_free(&data.allocatedData);
 
-	// test print
-	// printf("\n%-10s %-10s %-15s\n", "PORT", "STATE", "SERVICE");
-	
-	// for (int port = 0; port < 65536; port++)
-	// {
-	//     if (ports_results[port].port != NULL)
-	//     {
-	//         printf("%-5d/tcp   %-10s %-15s\n", port, "open", "syn-ack");
-	//     }
-	// }
+	print_scan_report(ports_results, data);
+
 	return 0;
 }
