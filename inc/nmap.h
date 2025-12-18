@@ -23,7 +23,7 @@
 # define MALLOC_ERROR "Error during allocation, closing program\n"
 # define THREAD_ERROR "Error during threads creation, closing program\n"
 
-# define SCAN_LIST "SYN NULL FIN XMAS ACK UDP"
+# define SCAN_LIST "SYN NULL ACK FIN XMAS UDP"
 # define SCAN_COUNT 6
 
 typedef enum e_nmap_scans_types {

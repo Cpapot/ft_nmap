@@ -62,7 +62,7 @@ uint16_t checksum(void *b, int len) {
     return result;
 }
 
-uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
+uint16_t pseudogram_checksum(struct iphdr *iph, void *header, uint16_t header_len, uint8_t protocol) {
     struct pseudo_header psh;
     char *pseudogram;
     int psize;
@@ -74,14 +74,19 @@ uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
     psh.source_address = iph->saddr;
     psh.dest_address = iph->daddr;
     psh.placeholder = 0;
-    psh.protocol = IPPROTO_TCP;
-    psh.tcp_length = htons(sizeof(struct tcphdr));
+    psh.protocol = protocol;
+    psh.tcp_length = htons(header_len);
 
     // Concat pseudo-header + TCP header
-    psize = sizeof(struct pseudo_header) + sizeof(struct tcphdr);
+    psize = sizeof(struct pseudo_header) + header_len;
     pseudogram = malloc(psize);
+
+    if (!pseudogram){
+        printf("MALLOC ERROR\n"); return 0;
+    }
+
     memcpy(pseudogram, &psh, sizeof(struct pseudo_header));
-    memcpy(pseudogram + sizeof(struct pseudo_header), tcph, sizeof(struct tcphdr));
+    memcpy(pseudogram + sizeof(struct pseudo_header), header, header_len);
 
     result = checksum(pseudogram, psize);
     free(pseudogram);
@@ -90,7 +95,6 @@ uint16_t tcp_checksum(struct iphdr *iph, struct tcphdr *tcph) {
 
 int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_type) {
     struct iphdr *iph = (struct iphdr *)datagram;
-    struct tcphdr *tcph = (struct tcphdr *)(datagram + sizeof(struct iphdr));
     char my_ip[INET_ADDRSTRLEN];
 
     get_local_ip(dest_ip, my_ip);
@@ -100,78 +104,97 @@ int build_packet(char *datagram, char *dest_ip, uint16_t dest_port, int scan_typ
     iph->ihl = 5;
     iph->version = 4;
     iph->tos = 0;
-    iph->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
+    iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr));
     iph->id = htons(rand() % 65535);
     iph->frag_off = 0;
     iph->ttl = 64;
-    iph->protocol = IPPROTO_TCP;
 
     iph->daddr = inet_addr(dest_ip);
     iph->saddr = inet_addr(my_ip);
 
-    iph->check = 0;
-    iph->check = checksum(datagram, sizeof(struct iphdr));
+    // === UDP ===
+    if (scan_type == UDP) {
+        struct udphdr *udph = (struct udphdr *)(datagram + sizeof(struct iphdr));
 
-    //=== TCP HEADER ===
-    tcph->source = htons(get_src_port_for_scan(scan_type));
-    tcph->dest = htons(dest_port);
-    tcph->seq = htonl(rand());
-    tcph->ack_seq = 0;
-    tcph->doff = 5;
-    tcph->window = htons(5840);
-    tcph->urg_ptr = 0;
+        iph->protocol = IPPROTO_UDP;
+        iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr));
 
-    tcph->fin = 0;
-    tcph->syn = 0;
-    tcph->rst = 0;
-    tcph->psh = 0;
-    tcph->ack = 0;
-    tcph->urg = 0;
+        udph->source = htons(SRC_PORT_UDP);
+        udph->dest = htons(dest_port);
+        udph->len = htons(sizeof(struct udphdr));
+        udph->check = 0;
 
-    // Flags according to scan type
-    switch (scan_type) {
-        case SYN:
-            tcph->syn = 1;
-            break;
-        case NULLMODE:
-            // all flags to 0
-            break;
-        case ACK:
-            tcph->ack = 1;
-            tcph->ack_seq = htonl(1);
-            break;
-        case FIN:
-            tcph->fin = 1;
-            break;
-        case XMAS:
-            tcph->fin = 1;
-            tcph->psh = 1;
-            tcph->urg = 1;
-            break;
+        iph->check = checksum(datagram, sizeof(struct iphdr));
+        udph->check = pseudogram_checksum(iph, udph, sizeof(struct udphdr), IPPROTO_UDP);
+
+        return sizeof(struct iphdr) + sizeof(struct udphdr);
     }
+    // === TCP ===
+    else {
+        struct tcphdr *tcph = (struct tcphdr *)(datagram + sizeof(struct iphdr));
 
-    // Calcul du checksum TCP
-    tcph->check = 0;
-    tcph->check = tcp_checksum(iph, tcph);
+        iph->protocol = IPPROTO_TCP;
+        iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr));
 
-    return sizeof(struct iphdr) + sizeof(struct tcphdr);
+        tcph->source = htons(get_src_port_for_scan(scan_type));
+        tcph->dest = htons(dest_port);
+        tcph->seq = htonl(rand());
+        tcph->ack_seq = 0;
+        tcph->doff = 5;
+        tcph->window = htons(5840);
+        tcph->urg_ptr = 0;
+
+        tcph->fin = 0;
+        tcph->syn = 0;
+        tcph->rst = 0;
+        tcph->psh = 0;
+        tcph->ack = 0;
+        tcph->urg = 0;
+
+        // Flags according to scan type
+        switch (scan_type) {
+            case SYN:
+                tcph->syn = 1;
+                break;
+            case ACK:
+                tcph->ack = 1;
+                tcph->ack_seq = htonl(1);
+                break;
+            case FIN:
+                tcph->fin = 1;
+                break;
+            case XMAS:
+                tcph->fin = 1;
+                tcph->psh = 1;
+                tcph->urg = 1;
+                break;
+        }
+
+        // Calcul du checksum TCP
+        iph->check = 0;
+        iph->check = checksum(datagram, sizeof(struct iphdr));
+
+        tcph->check = 0;
+        tcph->check = pseudogram_checksum(iph, tcph, sizeof(struct tcphdr), IPPROTO_TCP);
+
+        return sizeof(struct iphdr) + sizeof(struct tcphdr);
+    }
 }
 
-int send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
+int send_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
     int sockfd;
     char datagram[4096];
     struct sockaddr_in dest;
     int one = 1;
 
-    // Socket raw TCP
-    sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
-    if (sockfd < 0) {
-        perror("socket");
-        return -1;
-    }
+    ft_bzero(datagram, sizeof(datagram));
+
+    int protocol = (scan_type == UDP) ? IPPROTO_UDP : IPPROTO_TCP;
+
+    sockfd = socket(AF_INET, SOCK_RAW, protocol);
+    if (sockfd < 0) return -1;
 
     if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
-        perror("setsockopt");
         close(sockfd);
         return -1;
     }
@@ -192,20 +215,20 @@ int send_tcp_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
     return 0;
 }
 
-
 void packet_parsing(t_port_result *result, char * buffer) {
      struct iphdr *iph = (struct iphdr *)buffer;
 
-     // ==== TCP ===
+     // ==== DIRECT TCP ANSWER ===
      if (iph->protocol == IPPROTO_TCP) {
         struct tcphdr *tcph = (struct tcphdr *)(buffer + iph->ihl * 4);
         uint16_t scanned_port = ntohs(tcph->source); 
         uint16_t src_port = ntohs(tcph->dest);
-        int scan_type = src_port - 33000;
-        int scan_index = scan_type -1;
 
         if (src_port < 33001 || src_port > 33006)
             return;
+
+        int scan_type = src_port - 33000;
+        int scan_index = scan_type -1;
 
         result[scanned_port].scans[scan_index].answered = true;
 
@@ -225,19 +248,49 @@ void packet_parsing(t_port_result *result, char * buffer) {
         }
     }
 
-    // ==== ICMP (UDP Error)
+    // === direct UDP ANSZER ===
+    else if (iph->protocol == IPPROTO_UDP) {
+        struct udphdr *udph = (struct udphdr *)(buffer + iph->ihl * 4);
+        uint16_t scanned_port = ntohs(udph->source);
+
+        result[scanned_port].scans[UDP - 1].answered = true;
+        result[scanned_port].scans[UDP - 1].state = PORT_OPEN;
+    }
+
+    // ==== ICMP (UDP and TCP Errors)
     else if (iph->protocol == IPPROTO_ICMP) {
         struct icmphdr *icmph = (struct icmphdr *)(buffer + (iph->ihl * 4));
 
-        // 3: Dest Unreachable
-        if (icmph->type == 3 && icmph->code == 3) {
-            
-            struct iphdr *orig_iph = (struct iphdr *)((char *)icmph + 8);
-            struct udphdr *orig_udph = (struct udphdr *)((char *)orig_iph + (orig_iph->ihl * 4));
+        struct iphdr *orig_iph = (struct iphdr *)((char *)icmph + 8);
+        int orig_protocol = orig_iph->protocol;
 
-            uint16_t scanned_port = ntohs(orig_udph->dest);
-            result[scanned_port].scans[UDP - 1].answered = 1;
-            result[scanned_port].scans[UDP - 1].state = PORT_CLOSED;
+        // 3: Dest Unreachable
+        if (icmph->type == 3) {
+            // UDP scan
+            if (orig_protocol == IPPROTO_UDP) {
+                struct udphdr *orig_udph = (struct udphdr *)((char *)orig_iph + (orig_iph->ihl * 4));
+                uint16_t scanned_port = ntohs(orig_udph->dest); 
+
+                result[scanned_port].scans[UDP - 1].answered = true;
+
+            if (icmph->code == 3) // unreachable -> Closed
+                result[scanned_port].scans[UDP - 1].state = PORT_CLOSED;
+            else // Others -> FILTERED
+                result[scanned_port].scans[UDP - 1].state = PORT_FILTERED;
+                
+            }
+            // TCP scan (SYN, XMAS...)
+            else if (orig_protocol == IPPROTO_TCP) {
+                struct tcphdr *orig_tcph = (struct tcphdr *)((char *)orig_iph + (orig_iph->ihl * 4));
+                uint16_t scanned_port = ntohs(orig_tcph->dest); 
+                uint16_t src_port = ntohs(orig_tcph->source);
+
+                if (src_port >= SRC_PORT_SYN && src_port <= SRC_PORT_XMAS) {
+                    int scan_type = src_port - 33000;
+                    
+                    result[scanned_port].scans[scan_type - 1].answered = true;
+                    result[scanned_port].scans[scan_type - 1].state = PORT_FILTERED;            }
+            }
         }
     }
 }
@@ -262,7 +315,7 @@ int receiver(t_port_result *results) {
         timeout.tv_sec = 1;
         timeout.tv_usec = 0;
         int max_fd = (sock_tcp > sock_icmp ? sock_tcp : sock_icmp);
-        if (select(max_fd,  &readfds, NULL, NULL, &timeout) < 0 )
+        if (select(max_fd + 1,  &readfds, NULL, NULL, &timeout) < 0 )
             continue;
 
         if (FD_ISSET(sock_tcp, &readfds)) {
