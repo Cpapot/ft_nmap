@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
+/*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/12/05 15:17:19 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/23 16:39:25 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,6 +125,7 @@ int	main(int argc, char **argv)
 	{
 		t_threads_data	threadData;
 		threadData.distributedTasks = distribute_tasks(&data);
+		//threadData.ports_results = ports_results;
 		launch_threads(&threadData, &data);
 	}
 	else
@@ -132,17 +133,16 @@ int	main(int argc, char **argv)
 		for (int i = 0; i != data.taskCount; i++)
 		{
 			send_packet(data.uniqueTaskList[i].ipToScan, data.uniqueTaskList[i].portToScan, data.uniqueTaskList[i].scanType);
-			usleep(5000);
+			//usleep(5000);
 		}
 	}
-
+	
+	finalize_scan_results(ports_results, &data);
 	// waiting for late answers
-	sleep(10);
+	//sleep(10);
 
 	pthread_cancel(sniffer_thread);
 	pthread_join(sniffer_thread, NULL);
-
-	finalize_scan_results(ports_results, &data);
 
 	stock_free(&data.allocatedData);
 

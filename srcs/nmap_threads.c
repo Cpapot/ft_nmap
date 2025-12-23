@@ -3,14 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   nmap_threads.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
+/*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/01 13:00:38 by cpapot            #+#    #+#             */
-/*   Updated: 2025/12/05 14:14:58 by cpapot           ###   ########.fr       */
+/*   Updated: 2025/12/23 16:39:18 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nmap_threads.h"
+
+int		send_packet(char *dest_ip, uint16_t dest_port, int scan_type);
 
 t_threads_tasks	*distribute_tasks(t_nmap_data *data)
 {
@@ -41,7 +43,12 @@ t_threads_tasks	*distribute_tasks(t_nmap_data *data)
 void* thread_routine(void *arg)
 {
 	t_threads_tasks data = *(t_threads_tasks*)arg;
-	printf("i am thread %d, and i have %d tasks\n", data.threadId, data.taskCount);
+	//printf("i am thread %d, and i have %d tasks\n", data.threadId, data.taskCount);
+	for (int i = 0; i != data.taskCount; i++)
+	{
+		send_packet(data.taskList[i]->ipToScan, data.taskList[i]->portToScan, data.taskList[i]->scanType);
+		//usleep(5000);
+	}
 	return NULL;
 }
 
@@ -53,6 +60,7 @@ int	launch_threads(t_threads_data *threadsData, t_nmap_data *data)
 
 	for (int i = 0; i != data->threadsCount; i++)
 	{
+		threadsData->distributedTasks[i].ports_results = threadsData->ports_results;
 		if (pthread_create(&threadsData->pthreadArray[i], NULL, thread_routine, &threadsData->distributedTasks[i]))
 		{
 			for (int j = 0; j != i; j++)
