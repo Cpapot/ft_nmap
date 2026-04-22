@@ -6,12 +6,13 @@
 /*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/05 17:06:26 by coco              #+#    #+#             */
-/*   Updated: 2025/12/23 16:39:25 by coco             ###   ########.fr       */
+/*   Updated: 2026/04/22 16:27:24 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nmap.h"
 #include "nmap_threads.h"
+#include "timer.h"
 
 int		parsing(int argc, char **argv, t_nmap_data *data);
 int		fill_unique_tasks(t_nmap_data *data);
@@ -117,6 +118,9 @@ int	main(int argc, char **argv)
 
 	fill_unique_tasks(&data);
 
+	setup_timer(&data);
+	init_timer();
+
 	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, ports_results) != 0)
 		return (nmap_error("Thread error",  &data, 1));
 	sleep(1);
@@ -133,19 +137,26 @@ int	main(int argc, char **argv)
 		for (int i = 0; i != data.taskCount; i++)
 		{
 			send_packet(data.uniqueTaskList[i].ipToScan, data.uniqueTaskList[i].portToScan, data.uniqueTaskList[i].scanType);
-			//usleep(5000);
+			usleep(500);
 		}
 	}
 	
 	finalize_scan_results(ports_results, &data);
 	// waiting for late answers
-	//sleep(10);
+	sleep(3);
 
 	pthread_cancel(sniffer_thread);
 	pthread_join(sniffer_thread, NULL);
 
-	stock_free(&data.allocatedData);
+	
+	long double res = stop_timer();
+	print_config(&data, "no");
 
+	
+
+		
+	stock_free(&data.allocatedData);
+	
 	print_scan_report(ports_results, data);
 
 	return 0;

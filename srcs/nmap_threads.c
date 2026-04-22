@@ -6,7 +6,7 @@
 /*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/01 13:00:38 by cpapot            #+#    #+#             */
-/*   Updated: 2025/12/23 16:39:18 by coco             ###   ########.fr       */
+/*   Updated: 2026/04/22 14:29:00 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void* thread_routine(void *arg)
 	for (int i = 0; i != data.taskCount; i++)
 	{
 		send_packet(data.taskList[i]->ipToScan, data.taskList[i]->portToScan, data.taskList[i]->scanType);
-		//usleep(5000);
+		usleep(500);
 	}
 	return NULL;
 }

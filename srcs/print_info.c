@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   print_info.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cpapot <cpapot@student.42lyon.fr >         +#+  +:+       +#+        */
+/*   By: coco <coco@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/24 13:23:37 by cpapot            #+#    #+#             */
-/*   Updated: 2025/12/01 14:13:45 by cpapot           ###   ########.fr       */
+/*   Updated: 2026/04/22 16:33:47 by coco             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,14 +32,16 @@ static void	str_scan_type(char* res, int *scanType)
 	ft_free_split(scanTypeList);
 }
 
-void	print_config(t_nmap_data *data, char *actualIp)
+void	print_config(t_nmap_data *data, long double elapsed)
 {
 	char	buff[256];
 
 	str_scan_type(buff, data->scanType);
 	printf("Scan Configurations\n");
-	printf("Target Ip-Address : %s\n", actualIp);
+	data->ips
+	
 	printf("No of Ports to scan : %d\n", data->portsCount);
 	printf("Scans to be performed : %s\n", buff);
 	printf("No of threads : %d\n", data->threadsCount);
+	
 }

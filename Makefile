@@ -10,7 +10,8 @@ HEADERS		=	nmap.h				\
 				network.h			\
 				print_info.h		\
 				nmap_threads.h		\
-				scan.h
+				scan.h				\
+				timer.h	
 
 SRCS		=	main.c						\
 				parsing/parsing.c			\
@@ -20,7 +21,8 @@ SRCS		=	main.c						\
 				print_info.c				\
 				nmap_threads.c				\
 				nmap_utils.c				\
-				scan/scan.c
+				scan/scan.c					\
+				timer.c
 
 LIBFTSRC	=	libftprintf.a libft.a printffd.a
 
