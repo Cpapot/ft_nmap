@@ -12,6 +12,7 @@
 
 #include "nmap.h"
 #include "nmap_threads.h"
+#include "scan.h"
 #include "timer.h"
 
 int		parsing(int argc, char **argv, t_nmap_data *data);
@@ -19,12 +20,19 @@ int		fill_unique_tasks(t_nmap_data *data);
 t_threads_tasks	*distribute_tasks(t_nmap_data *data);
 int		launch_threads(t_threads_data *threadsData, t_nmap_data *data);
 int		send_packet(char *dest_ip, uint16_t dest_port, int scan_type);
-int		receiver(t_port_result *results);
+
 
 
 void *sniffer_routine(void *arg) {
-	t_port_result *ports_results = (t_port_result *)arg;
-	receiver(ports_results);
+	t_ip_result *ip_results = (t_ip_result *)arg;
+	
+	// Count the number of IPs in the results
+	int ip_count = 0;
+	while (ip_results[ip_count].ip != NULL) {
+		ip_count++;
+	}
+	
+	receiver(ip_results, ip_count);
 	return NULL;
 }
 
@@ -108,9 +116,7 @@ int	main(int argc, char **argv)
 {
 	t_nmap_data data;
 	pthread_t sniffer_thread;
-	t_port_result ports_results[65536];
-
-	ft_bzero(&ports_results, sizeof(ports_results));
+	
 	ft_bzero(&data, sizeof(t_nmap_data));
 
 	if (parsing(argc, argv, &data))
@@ -118,18 +124,35 @@ int	main(int argc, char **argv)
 
 	fill_unique_tasks(&data);
 
+	// Initialize IP results
+	t_ip_result *ip_results = stock_malloc(sizeof(t_ip_result) * data.ipCount, &data.allocatedData);
+	if (!ip_results)
+		nmap_error(MALLOC_ERROR, &data, 1);
+	
+	// Initialize results for each IP
+	t_list *current_ip = data.ips;
+	for (int i = 0; i < data.ipCount; i++) {
+		ip_results[i].ip = current_ip->content;
+		ip_results[i].ports = stock_malloc(sizeof(t_port_result) * 65536, &data.allocatedData);
+		if (!ip_results[i].ports)
+			nmap_error(MALLOC_ERROR, &data, 1);
+		ft_bzero(ip_results[i].ports, sizeof(t_port_result) * 65536);
+		current_ip = current_ip->next;
+	}
+
 	setup_timer(&data);
 	init_timer(&data);
 
-	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, ports_results) != 0)
+	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, ip_results) != 0)
 		return (nmap_error("Thread error",  &data, 1));
 	sleep(1);
 
 	if (data.threadsCount > 1)
 	{
 		t_threads_data	threadData;
+		threadData.ip_results = ip_results;
+		threadData.ip_count = data.ipCount;
 		threadData.distributedTasks = distribute_tasks(&data);
-		//threadData.ports_results = ports_results;
 		launch_threads(&threadData, &data);
 	}
 	else
@@ -141,7 +164,11 @@ int	main(int argc, char **argv)
 		}
 	}
 	
-	finalize_scan_results(ports_results, &data);
+	// Finalize results for each IP
+	for (int i = 0; i < data.ipCount; i++) {
+		finalize_scan_results(ip_results[i].ports, &data);
+	}
+	
 	// waiting for late answers
 	sleep(3);
 
@@ -150,9 +177,15 @@ int	main(int argc, char **argv)
 
 	print_config(&data, data.ips->content);
 
+	// Print results for each IP
+	current_ip = data.ips;
+	for (int i = 0; i < data.ipCount; i++) {
+		printf("\n=== SCAN RESULTS FOR %s ===\n", (char *)current_ip->content);
+		print_scan_report(ip_results[i].ports, data);
+		current_ip = current_ip->next;
+	}
+
 	stock_free(&data.allocatedData);
 	
-	print_scan_report(ports_results, data);
-
 	return 0;
 }

@@ -89,6 +89,11 @@ typedef struct s_port_result {
     t_scan_result   scans[SCAN_COUNT]; // indexé par type de scan
 }   t_port_result;
 
+typedef struct s_ip_result {
+    char            *ip;
+    t_port_result   *ports;
+}   t_ip_result;
+
 // Paramètres de scan (passer en argument aux fonctions de scan)
 typedef struct s_scan_params {
     char *target_ip;

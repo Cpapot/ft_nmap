@@ -19,7 +19,8 @@
 // params des threads
 typedef struct s_threads_tasks
 {
-	t_port_result		*ports_results;
+	t_ip_result			*ip_results;
+	int					ip_count;
 	t_unique_task		**taskList;
 	int					taskCount;
 	int					threadId;
@@ -27,7 +28,8 @@ typedef struct s_threads_tasks
 
 typedef struct s_threads_data
 {
-	t_port_result		*ports_results;
+	t_ip_result			*ip_results;
+	int					ip_count;
 	pthread_t			*pthreadArray;
 	t_threads_tasks		*distributedTasks;
 }	t_threads_data;

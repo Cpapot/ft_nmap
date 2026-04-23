@@ -215,8 +215,27 @@ int send_packet(char *dest_ip, uint16_t dest_port, int scan_type) {
     return 0;
 }
 
-void packet_parsing(t_port_result *result, char * buffer) {
-     struct iphdr *iph = (struct iphdr *)buffer;
+void packet_parsing(t_ip_result *ip_results, int ip_count, char * buffer) {
+    struct iphdr *iph = (struct iphdr *)buffer;
+    char src_ip[INET_ADDRSTRLEN];
+    
+    // Extract source IP from the response packet
+    inet_ntop(AF_INET, &iph->saddr, src_ip, INET_ADDRSTRLEN);
+    
+    // Find which IP result this packet belongs to
+    t_ip_result *target_ip_result = NULL;
+    for (int i = 0; i < ip_count; i++) {
+        if (strcmp(ip_results[i].ip, src_ip) == 0) {
+            target_ip_result = &ip_results[i];
+            break;
+        }
+    }
+    
+    if (!target_ip_result) {
+        return; // Packet doesn't belong to any scanned IP
+    }
+    
+    t_port_result *result = target_ip_result->ports;
 
      // ==== DIRECT TCP ANSWER ===
      if (iph->protocol == IPPROTO_TCP) {
@@ -295,7 +314,7 @@ void packet_parsing(t_port_result *result, char * buffer) {
     }
 }
 
-int receiver(t_port_result *results) {
+int receiver(t_ip_result *ip_results, int ip_count) {
     int sock_tcp, sock_icmp;
     fd_set readfds;
     struct timeval timeout;
@@ -320,11 +339,11 @@ int receiver(t_port_result *results) {
 
         if (FD_ISSET(sock_tcp, &readfds)) {
             if (recvfrom(sock_tcp, buffer, sizeof(buffer), 0, NULL, NULL) > 0)
-                packet_parsing(results, buffer);
+                packet_parsing(ip_results, ip_count, buffer);
         }
         if (FD_ISSET(sock_icmp, &readfds)) {
           if (recvfrom(sock_icmp, buffer, sizeof(buffer), 0, NULL, NULL) > 0)
-              packet_parsing(results, buffer);
+              packet_parsing(ip_results, ip_count, buffer);
         }
     }
     close(sock_tcp);

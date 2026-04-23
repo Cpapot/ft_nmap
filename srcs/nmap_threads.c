@@ -60,7 +60,8 @@ int	launch_threads(t_threads_data *threadsData, t_nmap_data *data)
 
 	for (int i = 0; i != data->threadsCount; i++)
 	{
-		threadsData->distributedTasks[i].ports_results = threadsData->ports_results;
+		threadsData->distributedTasks[i].ip_results = threadsData->ip_results;
+		threadsData->distributedTasks[i].ip_count = threadsData->ip_count;
 		if (pthread_create(&threadsData->pthreadArray[i], NULL, thread_routine, &threadsData->distributedTasks[i]))
 		{
 			for (int j = 0; j != i; j++)
