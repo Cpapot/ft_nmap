@@ -225,6 +225,9 @@ void packet_parsing(t_ip_result *ip_results, int ip_count, char * buffer) {
     // Find which IP result this packet belongs to
     t_ip_result *target_ip_result = NULL;
     for (int i = 0; i < ip_count; i++) {
+        if (ip_results[i].ip == NULL || src_ip[0] == '\0') {
+            continue;
+        }
         if (strcmp(ip_results[i].ip, src_ip) == 0) {
             target_ip_result = &ip_results[i];
             break;
