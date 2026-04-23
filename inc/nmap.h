@@ -26,6 +26,13 @@
 # define SCAN_LIST "SYN NULL ACK FIN XMAS UDP"
 # define SCAN_COUNT 6
 
+typedef struct s_time_data
+{
+	long double		actual_delay;
+	long double		total_delay;
+} t_time_data;
+
+
 typedef enum e_nmap_scans_types {
 	ALL = 0,
 	SYN,
@@ -53,6 +60,7 @@ typedef struct s_nmap_data
 	t_list			*ips;
 	int				ipCount;
 	int				threadsCount;		//nombre de thread			default = 0
+	t_time_data		*time_data;			
 
 	t_unique_task	*uniqueTaskList;
 	int				taskCount;
@@ -89,7 +97,7 @@ typedef struct s_scan_params {
     int timeout_ms;
 } t_scan_params;
 
-void	print_config(t_nmap_data *data, char *actualIp);
+void	print_config(t_nmap_data *data, char *ip);
 int		nmap_error(char *error, t_nmap_data *data, int doExit);
 
 

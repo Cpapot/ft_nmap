@@ -119,7 +119,7 @@ int	main(int argc, char **argv)
 	fill_unique_tasks(&data);
 
 	setup_timer(&data);
-	init_timer();
+	init_timer(&data);
 
 	if (pthread_create(&sniffer_thread, NULL, sniffer_routine, ports_results) != 0)
 		return (nmap_error("Thread error",  &data, 1));
@@ -148,13 +148,8 @@ int	main(int argc, char **argv)
 	pthread_cancel(sniffer_thread);
 	pthread_join(sniffer_thread, NULL);
 
-	
-	long double res = stop_timer();
-	print_config(&data, "no");
+	print_config(&data, data.ips->content);
 
-	
-
-		
 	stock_free(&data.allocatedData);
 	
 	print_scan_report(ports_results, data);

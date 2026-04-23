@@ -18,16 +18,8 @@
 # include <sys/time.h>
 # include <math.h>
 
-
-typedef struct s_time_data
-{
-	long double		actual_delay;
-	long double		total_delay;
-} t_time_data;
-
 int			setup_timer(t_nmap_data *data);
-void 		init_timer(void);
-long double	stop_timer(void);
-
+void 		init_timer(t_nmap_data *data);
+long double	stop_timer(t_nmap_data *data);
 
 #endif
