@@ -164,7 +164,7 @@ int	main(int argc, char **argv)
 		for (int i = 0; i != data.taskCount; i++)
 		{
 			send_packet(data.uniqueTaskList[i].ipToScan, data.uniqueTaskList[i].portToScan, data.uniqueTaskList[i].scanType);
-			usleep(500);
+			usleep(100);
 		}
 	}
 	
