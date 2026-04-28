@@ -122,6 +122,10 @@ int	main(int argc, char **argv)
 	if (parsing(argc, argv, &data))
 		return 1;
 
+    if (geteuid() != 0) {
+        nmap_error("Must be a sudoer\n", &data, 1);
+    }
+
 	fill_unique_tasks(&data);
 
 	// Initialize IP results
