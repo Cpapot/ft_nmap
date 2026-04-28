@@ -174,7 +174,7 @@ int	main(int argc, char **argv)
 	}
 	
 	// waiting for late answers
-	usleep(100);
+	usleep(80);
 
 	pthread_cancel(sniffer_thread);
 	pthread_join(sniffer_thread, NULL);
